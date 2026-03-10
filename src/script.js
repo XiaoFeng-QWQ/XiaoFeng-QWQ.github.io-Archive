@@ -1,6 +1,8 @@
 /**
  * 主题管理器
  */
+import { initI18n, t, setLanguage } from './i18n.js';
+
 class ThemeManager {
     constructor() {
         this.htmlEl = document.documentElement;
@@ -66,12 +68,12 @@ class BlogLoader {
                 if (response && response.status === 'success' && response.data && response.data.dataSet) {
                     this.renderPosts(response.data.dataSet);
                 } else {
-                    this.showError('数据格式错误');
+                    this.showError(t('blog_error_format'));
                 }
             },
             error: (xhr, status, error) => {
                 console.error('AJAX 错误:', status, error);
-                this.showError('加载失败，请稍后重试');
+                this.showError(t('blog_error_fetch'));
             }
         });
     }
@@ -95,7 +97,7 @@ class BlogLoader {
         if (!posts || posts.length === 0) {
             this.listElement.append(`
                 <mdui-list-item>
-                    <div class="text-center w-100">暂无文章</div>
+                    <div class="text-center w-100">${t('blog_no_posts')}</div>
                 </mdui-list-item>
             `);
             return;
@@ -160,12 +162,12 @@ class LabLoader {
                 if (response && response.code === 200 && response.data && Array.isArray(response.data)) {
                     this.renderProjects(response.data);
                 } else {
-                    this.showError('数据格式错误');
+                    this.showError(t('lab_error_format'));
                 }
             },
             error: (xhr, status, error) => {
                 console.error('AJAX 错误:', status, error);
-                this.showError('加载失败，请稍后重试');
+                this.showError(t('lab_error_fetch'));
             }
         });
     }
@@ -173,10 +175,11 @@ class LabLoader {
     showLoading() {
         const loadingHTML = `
             <div class="bento-item item-full animate-pop">
-                <h1 class="hero-name">The <span class="text-tertiary">Lab</span></h1>
+                <h1 class="hero-name" data-i18n="lab_title">${t('lab_title')}</h1>
                 <mdui-list-item>
                     <div class="text-center w-100">
                         <mdui-circular-progress></mdui-circular-progress>
+                        <span data-i18n="blog_loading">${t('blog_loading')}</span>
                     </div>
                 </mdui-list-item>
             </div>
@@ -188,29 +191,26 @@ class LabLoader {
         if (!projects || projects.length === 0) {
             this.container.html(`
             <div class="bento-item item-full animate-pop">
-                <h1 class="hero-name">The <span class="text-tertiary">Lab</span></h1>
-                <p class="opacity-70 text-center p-40">暂无项目</p>
+                <h1 class="hero-name" data-i18n="lab_title">${t('lab_title')}</h1>
+                <p class="opacity-70 text-center p-40" data-i18n="lab_no_projects">${t('lab_no_projects')}</p>
             </div>
         `);
             return;
         }
 
-        // 构建项目卡片HTML
         let projectsHTML = `
         <div class="bento-item item-full animate-pop">
-            <h1 class="hero-name">The <span class="text-tertiary">Lab</span></h1>
-            <p class="opacity-70">正在孵化的想法与未发布的项目 (Work in Progress)</p>
+            <h1 class="hero-name" data-i18n="lab_title">${t('lab_title')}</h1>
+            <p class="opacity-70" data-i18n="lab_subtitle">${t('lab_subtitle')}</p>
         </div>
     `;
 
-        // 遍历项目数组，为每个项目创建卡片
         projects.forEach(project => {
             const progress = project.progress || 0;
             const isCompleted = progress >= 100;
-            const badgeText = isCompleted ? 'Completed' : 'Developing';
+            const badgeKey = isCompleted ? 'lab_completed' : 'lab_developing';
             const badgeVariant = isCompleted ? 'success' : '';
 
-            // 根据进度决定卡片样式类：100%使用小卡片，否则使用大卡片
             const cardClass = isCompleted ? 'item-lab-small' : 'item-lab-card';
 
             if (cardClass === 'item-lab-card') {
@@ -218,12 +218,13 @@ class LabLoader {
                 <div class="bento-item ${cardClass} animate-pop">
                     <div class="lab-card-header">
                         <h3 class="m-0">${project.name}</h3>
-                        <mdui-badge ${badgeVariant ? `variant="${badgeVariant}"` : ''}>${badgeText}</mdui-badge>
+                        <mdui-badge ${badgeVariant ? `variant="${badgeVariant}"` : ''} 
+                                    data-i18n="${badgeKey}">${t(badgeKey)}</mdui-badge>
                     </div>
                     <p class="lab-card-description">${project.description}</p>
                     <div class="mt-auto">
                         <div class="lab-progress-labels">
-                            <span>Progress</span>
+                            <span data-i18n="lab_progress">${t('lab_progress')}</span>
                             <span>${progress}%</span>
                         </div>
                         <mdui-linear-progress value="${progress}"></mdui-linear-progress>
@@ -231,7 +232,6 @@ class LabLoader {
                 </div>
             `;
             } else {
-                // 小卡片样式 - 已完成项目使用小卡片
                 projectsHTML += `
                 <div class="bento-item ${cardClass} animate-pop">
                     <mdui-icon name="done" class="icon-large text-success"></mdui-icon>
@@ -243,11 +243,10 @@ class LabLoader {
             }
         });
 
-        // 添加合作卡片作为最后一个元素
         projectsHTML += `
         <div class="bento-item item-lab-card animate-pop coop-card">
-            <h3 class="m-0">Looking for Collaboration?</h3>
-            <p class="opacity-80">如果你对以上任何项目感兴趣，欢迎联系我参与共同开发。</p>
+            <h3 class="m-0" data-i18n="lab_collab_title">${t('lab_collab_title')}</h3>
+            <p class="opacity-80" data-i18n="lab_collab_desc">${t('lab_collab_desc')}</p>
         </div>
     `;
 
@@ -257,10 +256,8 @@ class LabLoader {
     showError(message) {
         this.container.html(`
             <div class="bento-item item-full animate-pop">
-                <h1 class="hero-name">The <span class="text-error">Lab</span></h1>
-                <p class="opacity-70 text-center p-40 text-error">
-                    ${message}
-                </p>
+                <h1 class="hero-name" data-i18n="lab_title">${t('lab_title')}</h1>
+                <p class="opacity-70 text-center p-40 text-error">${message}</p>
             </div>
         `);
     }
@@ -293,7 +290,7 @@ class WeatherWidget {
 
     async init() {
         try {
-            this.setStatus('正在根据 IP 获取天气...');
+            this.setStatus(t('weather_status_ip'));
             const ipData = await this.fetchIpData();
             const city = ipData?.data?.city;
 
@@ -306,7 +303,7 @@ class WeatherWidget {
             this.setStatus(`${ipData?.data?.detail || city}`);
         } catch (error) {
             console.error('天气组件加载失败:', error);
-            this.setStatus('天气加载失败，请稍后重试');
+            this.setStatus(t('weather_fallback'));
             this.renderFallback();
         }
     }
@@ -385,10 +382,10 @@ class WeatherWidget {
         if (this.cityEl) this.cityEl.textContent = cityText;
         if (this.tempEl) this.tempEl.textContent = tempText;
         if (this.textEl) this.textEl.textContent = weatherText;
-        if (this.rangeEl) this.rangeEl.textContent = `高/低温 ${highText}°C / ${lowText}°C`;
-        if (this.humidityEl) this.humidityEl.textContent = `湿度 ${humidityText}`;
-        if (this.windEl) this.windEl.textContent = `风向/风力 ${windText}`;
-        if (this.updatedEl) this.updatedEl.textContent = `更新 ${updateTime}`;
+        if (this.rangeEl) this.rangeEl.innerHTML = t('weather_high_low', { high: highText, low: lowText });
+        if (this.humidityEl) this.humidityEl.innerHTML = t('weather_humidity', { humidity: humidityText });
+        if (this.windEl) this.windEl.innerHTML = t('weather_wind', { wind: windText });
+        if (this.updatedEl) this.updatedEl.textContent = t('weather_updated', { time: updateTime });
 
         if (this.iconEl) {
             if (iconUrl) {
@@ -401,7 +398,7 @@ class WeatherWidget {
 
         if (this.warningEl) {
             if (warningText) {
-                this.warningEl.textContent = `天气预警：${warningText}`;
+                this.warningEl.innerHTML = t('weather_warning', { warning: warningText });
                 this.warningEl.hidden = false;
             } else {
                 this.warningEl.hidden = true;
@@ -411,13 +408,13 @@ class WeatherWidget {
     }
 
     renderFallback() {
-        if (this.cityEl) this.cityEl.textContent = '天气不可用';
+        if (this.cityEl) this.cityEl.textContent = '--';
         if (this.tempEl) this.tempEl.textContent = '--°C';
-        if (this.textEl) this.textEl.textContent = '请检查网络后重试';
-        if (this.rangeEl) this.rangeEl.textContent = '高/低温 -- / --';
-        if (this.humidityEl) this.humidityEl.textContent = '湿度 --';
-        if (this.windEl) this.windEl.textContent = '风向/风力 --';
-        if (this.updatedEl) this.updatedEl.textContent = '--';
+        if (this.textEl) this.textEl.textContent = '--';
+        if (this.rangeEl) this.rangeEl.innerHTML = t('weather_high_low', { high: '--', low: '--' });
+        if (this.humidityEl) this.humidityEl.innerHTML = t('weather_humidity', { humidity: '--' });
+        if (this.windEl) this.windEl.innerHTML = t('weather_wind', { wind: '--' });
+        if (this.updatedEl) this.updatedEl.textContent = t('weather_updated', { time: '--' });
         if (this.warningEl) {
             this.warningEl.hidden = true;
             this.warningEl.textContent = '';
@@ -544,6 +541,8 @@ class BentoApp {
         this.labLoader = new LabLoader();
         this.weatherWidget = new WeatherWidget();
         this.router = new HashRouter(['home', 'about', 'work', 'settings'], 'home');
+
+        this.setupLanguageSwitcher();
     }
 
     setupTheme() {
@@ -615,8 +614,28 @@ class BentoApp {
             window.requestAnimationFrame(updateDockVisibility);
         }, { passive: true });
     }
+
+    setupLanguageSwitcher() {
+        const menuItems = document.querySelectorAll('mdui-menu-item[data-lang]');
+        menuItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                const lang = e.target.getAttribute('data-lang');
+                setLanguage(lang, () => {
+                    if (this.weatherWidget) {
+                        this.weatherWidget.init();
+                    }
+                });
+            });
+        });
+    }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+// 等待 DOM 加载并初始化 i18n，然后启动应用
+window.addEventListener('DOMContentLoaded', async () => {
+    try {
+        await initI18n('./src/lang.json');
+    } catch (e) {
+        console.error('Failed to load language file:', e);
+    }
     new BentoApp();
 });

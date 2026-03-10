@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/mdui/2.1.4/mdui.min.css');
+
 /* ================= 全局变量与底色 ================= */
 * {
     user-select: none;
@@ -46,6 +49,18 @@ body::before {
 
     pointer-events: none;
     will-change: transform;
+}
+
+.lang-switcher {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 1000;
+}
+
+.lang-switcher mdui-button-icon {
+    background: rgb(var(--mdui-color-surface-container));
+    backdrop-filter: blur(8px);
 }
 
 .depth-layer {

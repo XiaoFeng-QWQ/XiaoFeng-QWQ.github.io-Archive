@@ -3,19 +3,20 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>小枫_QWQ个人主页 - 前端与后端开发者的个人网站</title>
+    <title data-i18n="site_title">小枫_QWQ个人主页 - 前端与后端开发者的个人网站</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="content-language" content="zh-CN">
-    <meta name="description" content="小枫_QWQ的个人主页，展示了小枫_QWQ作为一个业余网页开发者的个人项目与经验，专注于前端和后端开发技术。">
-    <meta name="keywords" content="小枫_QWQ, 小枫, 个人主页, 前端开发, 后端开发, Web开发, 程序员个人网站">
+    <meta name="description" data-i18n="site_description"
+        content="小枫_QWQ的个人主页，展示了小枫_QWQ作为一个业余网页开发者的个人项目与经验，专注于前端和后端开发技术。">
+    <meta name="keywords" data-i18n="site_keywords" content="小枫_QWQ, 小枫, 个人主页, 前端开发, 后端开发, Web开发, 程序员个人网站">
     <meta name="author" content="小枫_QWQ">
     <meta name="copyright" content="小枫_QWQ">
-    <meta property="og:title" content="小枫_QWQ的个人主页 - 业余网页开发者">
-    <meta property="og:description" content="欢迎访问小枫_QWQ的个人主页，了解我的前端和后端开发项目，技术经验分享。">
+    <meta property="og:title" data-i18n="og_title" content="小枫_QWQ的个人主页 - 业余网页开发者">
+    <meta property="og:description" data-i18n="og_description" content="欢迎访问小枫_QWQ的个人主页，了解我的前端和后端开发项目，技术经验分享。">
     <meta property="og:url" content="https://xiaofengqwq.com">
     <meta property="og:type" content="website">
-    <meta name="twitter:title" content="小枫_QWQ的个人主页 - 业余网页开发者">
-    <meta name="twitter:description" content="欢迎访问小枫_QWQ的个人主页，了解我的前端和后端开发项目，技术经验分享。">
+    <meta name="twitter:title" data-i18n="twitter_title" content="小枫_QWQ的个人主页 - 业余网页开发者">
+    <meta name="twitter:description" data-i18n="twitter_description" content="欢迎访问小枫_QWQ的个人主页，了解我的前端和后端开发项目，技术经验分享。">
     <script type="application/ld+json">
         {
           "@context": "https://schema.org",
@@ -34,33 +35,45 @@
           "knowsAbout": ["前端开发", "后端开发", "JavaScript", "PHP", "Python"]
         }
     </script>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/mdui@2/mdui.css">
     <link rel="stylesheet" href="./src/style.css">
     <link rel="shortcut icon" href="./src/640.webp" type="image/x-icon">
 </head>
 
 <body>
+    <!-- 语言切换下拉菜单 -->
+    <div class="lang-switcher">
+        <mdui-dropdown>
+            <mdui-button-icon icon="language" slot="trigger"></mdui-button-icon>
+            <mdui-menu>
+                <mdui-menu-item data-lang="zh">中文</mdui-menu-item>
+                <mdui-menu-item data-lang="en">English</mdui-menu-item>
+            </mdui-menu>
+        </mdui-dropdown>
+    </div>
+
     <main id="app-container">
 
         <section id="home" class="bento-grid">
             <div class="bento-item item-hero animate-pop">
-                <h1 class="hero-name">Hello, I'm <span style="color: rgb(var(--mdui-color-primary));">小枫_QWQ</span>
+                <h1 class="hero-name">
+                    <span data-i18n="hero_hello">Hello, I'm</span>
+                    <span style="color: rgb(var(--mdui-color-primary));">小枫_QWQ</span>
                 </h1>
-                <p class="hero-subtitle">全栈工程师 / 业余web程序员</p>
+                <p class="hero-subtitle" data-i18n="hero_subtitle">全栈工程师 / 业余web程序员</p>
             </div>
             <div class="bento-item item-projects animate-pop">
                 <div class="flex-between-center">
-                    <span class="section-title">Projects</span>
-                    <mdui-button href="https://github.com/XiaoFeng-QWQ" variant="text"
-                        icon="arrow_outward">All</mdui-button>
+                    <span class="section-title" data-i18n="projects_title">Projects</span>
+                    <mdui-button href="https://github.com/XiaoFeng-QWQ" variant="text" icon="arrow_outward"
+                        data-i18n="projects_all">All</mdui-button>
                 </div>
                 <div class="project-list">
                     <a href="https://gitee.com/XiaoFengQWQ/mc-websocket-player" class="project-entry">
                         <div class="icon-box"><mdui-icon name="camera"></mdui-icon></div>
                         <div class="project-entry-content">
-                            <div class="project-entry-title">WS播放器</div>
-                            <div class="project-entry-description">使用 WebSocket 在 MC 基岩版中播放视频。</div>
+                            <div class="project-entry-title" data-i18n="project_ws_title">WS播放器</div>
+                            <div class="project-entry-description" data-i18n="project_ws_desc">使用 WebSocket 在 MC
+                                基岩版中播放视频。</div>
                         </div>
                         <mdui-icon name="chevron_right"></mdui-icon>
                     </a>
@@ -70,8 +83,9 @@
                             <mdui-icon name="auto_stories"></mdui-icon>
                         </div>
                         <div class="project-entry-content">
-                            <div class="project-entry-title">Minimal Home Page</div>
-                            <div class="project-entry-description">基于 MDUI 2 的个人主页</div>
+                            <div class="project-entry-title" data-i18n="project_minimal_title">Minimal Home Page</div>
+                            <div class="project-entry-description" data-i18n="project_minimal_desc">基于 MDUI 2 的个人主页
+                            </div>
                         </div>
                         <mdui-icon name="chevron_right"></mdui-icon>
                     </a>
@@ -81,17 +95,16 @@
                             <mdui-icon name="chat"></mdui-icon>
                         </div>
                         <div class="project-entry-content">
-                            <div class="project-entry-title">XQFChatRoom</div>
-                            <div class="project-entry-description">
-                                这是一款前端使用mdui2构建并为企业级实时聊天解决方案，融合了简洁界面与强大功能，支持多房间通信、文件协作与机器人集成，为团队协作和社区交流提供高效平台。
-                            </div>
+                            <div class="project-entry-title" data-i18n="project_chat_title">XQFChatRoom</div>
+                            <div class="project-entry-description" data-i18n="project_chat_desc">
+                                这是一款前端使用mdui2构建并为企业级实时聊天解决方案，融合了简洁界面与强大功能，支持多房间通信、文件协作与机器人集成，为团队协作和社区交流提供高效平台。</div>
                         </div>
                         <mdui-icon name="chevron_right"></mdui-icon>
                     </a>
                 </div>
             </div>
             <div class="bento-item item-skills animate-pop">
-                <span class="skills-title">Stack</span>
+                <span class="skills-title" data-i18n="skills_title">Stack</span>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                     <mdui-chip variant="filled">JavaScript(ES6 Module)</mdui-chip>
                     <mdui-chip variant="filled">Python</mdui-chip>
@@ -101,13 +114,14 @@
                 </div>
             </div>
             <div class="bento-item item-contact animate-pop">
-                <mdui-button variant="filled" full-width icon="mail_outline">Contact Me</mdui-button>
+                <mdui-button variant="filled" full-width icon="mail_outline" data-i18n="contact_me">Contact
+                    Me</mdui-button>
                 <div class="social-links">
                     <mdui-button-icon href="mailto:1432777209@qq.com" icon="email" variant="tonal"></mdui-button-icon>
                     <mdui-button-icon href="https://space.bilibili.com" icon="live_tv"
                         variant="tonal"></mdui-button-icon>
                     <mdui-button variant="text" href="https://www.travellings.cn/go.html" target="_blank">
-                        <img src="./src/travellings.svg" alt="开往-友链接力" width="100px">
+                        <img src="./src/travellings.svg" alt="开往-友链接力" width="100px" data-i18n="footer_travellings">
                     </mdui-button>
                 </div>
             </div>
@@ -115,30 +129,32 @@
 
         <section id="about" class="bento-grid">
             <div class="bento-item item-about-text animate-pop">
-                <h2 class="hero-name">About <span style="color: rgb(var(--mdui-color-secondary));">Me</span></h2>
-                <p class="about-text">
-                    一名对前端艺术执着的开发者。喜欢从零构建有温度的产品。目前专注于 Web3 与 AI 辅助设计的交叉领域。<br>
-                    除了敲代码，我也会在博客分享我的技术心得与生活随笔。
-                </p>
+                <h2 class="hero-name">
+                    <span data-i18n="about_title">About</span>
+                    <span style="color: rgb(var(--mdui-color-secondary));">Me</span>
+                </h2>
+                <p class="about-text" data-i18n="about_text">一名对前端艺术执着的开发者。喜欢从零构建有温度的产品。目前专注于 Web3 与 AI
+                    辅助设计的交叉领域。<br>除了敲代码，我也会在博客分享我的技术心得与生活随笔。</p>
                 <div class="about-chips">
-                    <mdui-chip icon="location_on">HeBei, China</mdui-chip>
-                    <mdui-chip icon="language">Mandarin</mdui-chip>
-                    <mdui-chip icon="tag">强迫症</mdui-chip>
-                    <mdui-chip icon="tag">轻微二次元</mdui-chip>
-                    <mdui-chip icon="tag">电脑重度依赖</mdui-chip>
+                    <mdui-chip icon="location_on" data-i18n="about_chip_location">HeBei, China</mdui-chip>
+                    <mdui-chip icon="language" data-i18n="about_chip_language">Mandarin</mdui-chip>
+                    <mdui-chip icon="tag" data-i18n="about_chip_1">强迫症</mdui-chip>
+                    <mdui-chip icon="tag" data-i18n="about_chip_2">轻微二次元</mdui-chip>
+                    <mdui-chip icon="tag" data-i18n="about_chip_3">电脑重度依赖</mdui-chip>
                 </div>
             </div>
             <div class="bento-item item-blog-list animate-pop">
                 <div class="flex-between-center mb-20">
-                    <span class="section-title">Latest Journal</span>
-                    <mdui-button variant="text" href="https://blog.xiaofengqwq.com"
-                        icon="arrow_outward">All</mdui-button>
+                    <span class="section-title" data-i18n="blog_title">Latest Journal</span>
+                    <mdui-button variant="text" href="https://blog.xiaofengqwq.com" icon="arrow_outward"
+                        data-i18n="blog_all">All</mdui-button>
                 </div>
                 <div class="blog-scroll">
                     <mdui-list id="blog-posts-list">
                         <mdui-list-item>
                             <div style="text-align: center; width: 100%;">
                                 <mdui-circular-progress></mdui-circular-progress>
+                                <span data-i18n="blog_loading">加载中...</span>
                             </div>
                         </mdui-list-item>
                     </mdui-list>
@@ -146,23 +162,23 @@
             </div>
             <div class="bento-item item-weather animate-pop" id="weather-widget">
                 <div class="flex-between-center">
-                    <span class="section-title">Weather</span>
+                    <span class="section-title" data-i18n="weather_title">Weather</span>
                     <span class="weather-updated" id="weather-updated">--</span>
                 </div>
                 <div class="weather-main">
                     <img id="weather-icon" class="weather-icon" alt="天气图标" hidden>
                     <div class="weather-main-text">
-                        <div class="weather-city" id="weather-city">定位中...</div>
+                        <div class="weather-city" id="weather-city" data-i18n="weather_locating">定位中...</div>
                         <div class="weather-temp" id="weather-temp">--°C</div>
                         <div class="weather-text" id="weather-text">--</div>
                     </div>
                 </div>
                 <div class="weather-extra">
-                    <span id="weather-range">高/低温 -- / --</span>
-                    <span id="weather-humidity">湿度 --</span>
-                    <span id="weather-wind">风向/风力 --</span>
+                    <span id="weather-range" data-i18n="weather_high_low">高/低温 -- / --</span>
+                    <span id="weather-humidity" data-i18n="weather_humidity">湿度 --</span>
+                    <span id="weather-wind" data-i18n="weather_wind">风向/风力 --</span>
                 </div>
-                <p class="weather-status" id="weather-status">正在根据 IP 获取天气...</p>
+                <p class="weather-status" id="weather-status" data-i18n="weather_status_ip">正在根据 IP 获取天气...</p>
                 <p class="weather-warning" id="weather-warning" hidden></p>
             </div>
         </section>
@@ -171,9 +187,12 @@
 
         <section id="settings" class="bento-grid">
             <div class="bento-item item-full animate-pop">
-                <h2 class="hero-name">App <span style="color: rgb(var(--mdui-color-error));">Settings</span></h2>
+                <h2 class="hero-name">
+                    <span data-i18n="settings_title">App</span>
+                    <span style="color: rgb(var(--mdui-color-error));">Settings</span>
+                </h2>
                 <div class="settings-theme-row">
-                    <span>深色模式</span>
+                    <span data-i18n="settings_darkmode">深色模式</span>
                     <mdui-switch id="theme-switch"></mdui-switch>
                 </div>
             </div>
