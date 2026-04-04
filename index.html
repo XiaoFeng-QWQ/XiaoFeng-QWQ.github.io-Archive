@@ -173,13 +173,16 @@
                         <div class="weather-text" id="weather-text">--</div>
                     </div>
                 </div>
-                <div class="weather-extra">
-                    <span id="weather-range" data-i18n="weather_high_low">高/低温 -- / --</span>
-                    <span id="weather-humidity" data-i18n="weather_humidity">湿度 --</span>
-                    <span id="weather-wind" data-i18n="weather_wind">风向/风力 --</span>
+                <mdui-divider></mdui-divider>
+                <div class="weather-details">
+                    <div class="weather-range" id="weather-range">--</div>
+                    <div class="weather-humidity" id="weather-humidity">--</div>
+                    <div class="weather-wind" id="weather-wind">--</div>
+                    <div class="weather-feels-like" id="weather-feels-like" hidden>--</div>
+                    <div class="weather-visibility" id="weather-visibility" hidden>--</div>
                 </div>
-                <p class="weather-status" id="weather-status" data-i18n="weather_status_ip">正在根据 IP 获取天气...</p>
-                <p class="weather-warning" id="weather-warning" hidden></p>
+                <div class="weather-status" id="weather-status" hidden></div>
+                <div class="weather-warning" id="weather-warning" hidden></div>
             </div>
         </section>
 

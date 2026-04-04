@@ -561,6 +561,12 @@ body::before {
     color: rgb(var(--mdui-color-error));
 }
 
+.weather-details {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
 .social-links {
     display: flex;
     gap: 12px;

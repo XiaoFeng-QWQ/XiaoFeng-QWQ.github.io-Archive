@@ -3,6 +3,28 @@
  */
 import { initI18n, t, setLanguage } from './i18n.js';
 
+class VisualEngine {
+    constructor() {
+        this.grid = document.querySelectorAll('.bento-grid');
+        this.initParallax();
+    }
+
+    initParallax() {
+        // 鼠标跟随视差：让页面有深度感，脱离平面模版
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 30;
+            const y = (e.clientY / window.innerHeight - 0.5) * 30;
+
+            gsap.to('.bento-item', {
+                x: (i) => x * (i % 3 === 0 ? 0.5 : 1),
+                y: (i) => y * (i % 2 === 0 ? 0.5 : 1),
+                duration: 1.5,
+                ease: "power2.out"
+            });
+        });
+    }
+}
+
 class ThemeManager {
     constructor() {
         this.htmlEl = document.documentElement;
@@ -268,8 +290,7 @@ class LabLoader {
  */
 class WeatherWidget {
     constructor() {
-        this.ipApiUrl = 'https://api.pearktrue.cn/api/ip/high';
-        this.weatherApiUrl = 'https://api.lolimi.cn/API/weather/api';
+        this.weatherApiUrl = 'https://api.xiaofengqwq.com/api/v1/tools/weather';
         this.root = document.getElementById('weather-widget');
 
         if (!this.root) return;
@@ -284,126 +305,141 @@ class WeatherWidget {
         this.statusEl = document.getElementById('weather-status');
         this.warningEl = document.getElementById('weather-warning');
         this.iconEl = document.getElementById('weather-icon');
+        this.feelsLikeEl = document.getElementById('weather-feels-like');
+        this.visibilityEl = document.getElementById('weather-visibility');
 
         this.init();
     }
 
     async init() {
         try {
-            this.setStatus(t('weather_status_ip'));
-            const ipData = await this.fetchIpData();
-            const city = ipData?.data?.city;
-
-            if (!city) {
-                throw new Error('未获取到城市信息');
-            }
-
-            const weatherData = await this.fetchWeatherByCity(city);
-            this.renderWeather(ipData, weatherData);
-            this.setStatus(`${ipData?.data?.detail || city}`);
+            this.setStatus(t('weather_status_fetching'));
+            const weatherData = await this.fetchWeatherData();
+            this.renderWeather(weatherData);
+            this.setStatus(t('weather_status_success'));
         } catch (error) {
             console.error('天气组件加载失败:', error);
-            this.setStatus(t('weather_fallback'));
+            this.setStatus(error.message || t('weather_fallback'));
             this.renderFallback();
         }
     }
 
-    async fetchIpData() {
-        const response = await fetch(this.ipApiUrl, {
+    async fetchWeatherData() {
+        const requestUrl = `${this.weatherApiUrl}?type=now`;
+        const response = await fetch(requestUrl, {
             method: 'GET',
             headers: {
-                Accept: 'application/json'
+                'Accept': 'application/json'
             }
         });
 
         if (!response.ok) {
-            throw new Error(`IP API 请求失败: ${response.status}`);
+            throw new Error(`天气 API 请求失败: ${response.status}`);
         }
 
-        const data = await response.json();
-        if (!data || data.code !== 200 || !data.data) {
-            throw new Error('IP API 数据格式错误');
-        }
+        const result = await response.json();
 
-        return data;
+        if (result && result.code === 200 && result.data) {
+            return result.data;
+        } else {
+            throw new Error(result.message || '天气 API 数据格式错误');
+        }
     }
 
-    async fetchWeatherByCity(rawCity) {
-        const cityCandidates = this.getCityCandidates(rawCity);
-        let lastError = null;
+    renderWeather(data) {
+        const city = data.city || '--';
+        const temp = data.temp || '--';
+        const weatherText = data.weather || '--';
 
-        for (const city of cityCandidates) {
-            try {
-                const requestUrl = `${this.weatherApiUrl}?city=${encodeURIComponent(city)}`;
-                const response = await fetch(requestUrl, {
-                    method: 'GET',
-                    headers: {
-                        Accept: 'application/json'
-                    }
-                });
+        // 使用API返回的字段
+        const humidity = data.humidity || '--';
+        const visibility = data.visibility || '--';
+        const windDirection = data.wind_direction || '';
+        const windScale = data.wind_scale || '';
+        const windSpeed = data.wind_speed || '';
+        const feelsLike = data.feels_like || '--';
+        const obsTime = data.obs_time || '--';
 
-                if (!response.ok) {
-                    throw new Error(`天气 API 请求失败: ${response.status}`);
+        // 格式化风力显示
+        let windText = '--';
+        if (windDirection && windScale) {
+            windText = `${windDirection} ${windScale}级`;
+            if (windSpeed) {
+                windText += ` (${windSpeed}m/s)`;
+            }
+        } else if (windDirection) {
+            windText = windDirection;
+        } else if (windScale) {
+            windText = `${windScale}级`;
+        }
+
+        console.debug('天气数据:', data);
+
+        // 处理温度范围（如果living数据存在）
+        let highTemp = '--', lowTemp = '--';
+        if (data.living && Array.isArray(data.living)) {
+            const dressIndex = data.living.find(item => item.name === '穿衣指数');
+            if (dressIndex && dressIndex.text) {
+                const match = dressIndex.text.match(/(\d+)℃~(\d+)℃/);
+                if (match) {
+                    lowTemp = match[1];
+                    highTemp = match[2];
                 }
-
-                const result = await response.json();
-                if (result && result.code === 1 && result.data) {
-                    return result.data;
-                }
-
-                throw new Error(result?.text || '天气 API 数据格式错误');
-            } catch (error) {
-                lastError = error;
             }
         }
 
-        throw lastError || new Error('天气 API 请求失败');
-    }
-
-    getCityCandidates(city) {
-        const trimmed = String(city || '').trim();
-        const noSuffix = trimmed.replace(/市$/, '');
-        return [...new Set([trimmed, noSuffix].filter(Boolean))];
-    }
-
-    renderWeather(ipData, weatherData) {
-        const current = weatherData?.current || {};
-        const cityText = weatherData?.city || current?.city || ipData?.data?.city || '--';
-        const weatherText = current?.weather || weatherData?.weather || '--';
-        const tempText = current?.temp ? `${current.temp}°C` : '--°C';
-        const highText = weatherData?.temp || '--';
-        const lowText = weatherData?.tempn || '--';
-        const humidityText = current?.humidity || '--';
-        const windText = `${current?.wind || weatherData?.wind || '--'} ${current?.windSpeed || weatherData?.windSpeed || ''}`.trim();
-        const updateTime = current?.time || weatherData?.time || '--';
-        const warningText = weatherData?.warning?.warning || '';
-        const iconUrl = current?.image || '';
-
-        if (this.cityEl) this.cityEl.textContent = cityText;
-        if (this.tempEl) this.tempEl.textContent = tempText;
+        // 填充DOM元素
+        if (this.cityEl) this.cityEl.textContent = city;
+        if (this.tempEl) this.tempEl.textContent = `${temp}°C`;
         if (this.textEl) this.textEl.textContent = weatherText;
-        if (this.rangeEl) this.rangeEl.innerHTML = t('weather_high_low', { high: highText, low: lowText });
-        if (this.humidityEl) this.humidityEl.innerHTML = t('weather_humidity', { humidity: humidityText });
-        if (this.windEl) this.windEl.innerHTML = t('weather_wind', { wind: windText });
-        if (this.updatedEl) this.updatedEl.textContent = t('weather_updated', { time: updateTime });
 
-        if (this.iconEl) {
-            if (iconUrl) {
-                this.iconEl.src = iconUrl;
-                this.iconEl.hidden = false;
-            } else {
-                this.iconEl.hidden = true;
-            }
+        // 更新温度范围
+        if (this.rangeEl) {
+            const template = t('weather_high_low', { high: highTemp, low: lowTemp });
+            this.rangeEl.textContent = template;
         }
 
+        // 更新湿度
+        if (this.humidityEl) {
+            const template = t('weather_humidity', { humidity: `${humidity}%` });
+            this.humidityEl.textContent = template;
+        }
+
+        // 更新风力
+        if (this.windEl) {
+            const template = t('weather_wind', { wind: windText });
+            this.windEl.textContent = template;
+        }
+
+        // 更新体感温度（如果存在对应DOM元素）
+        if (this.feelsLikeEl && feelsLike !== '--') {
+            const template = t('weather_feels_like', { feelsLike: `${feelsLike}°C` });
+            this.feelsLikeEl.textContent = template;
+            this.feelsLikeEl.hidden = false;
+        }
+
+        // 更新能见度（如果存在对应DOM元素）
+        if (this.visibilityEl && visibility !== '--') {
+            const template = t('weather_visibility', { visibility: `${visibility}km` });
+            this.visibilityEl.textContent = template;
+            this.visibilityEl.hidden = false;
+        }
+
+        // 更新时间
+        if (this.updatedEl) {
+            const template = t('weather_updated', { time: obsTime });
+            this.updatedEl.textContent = template;
+        }
+
+        // 新接口没有直接提供图标URL，可以选择隐藏图标或使用一个默认图标
+        if (this.iconEl) {
+            this.iconEl.hidden = true;
+        }
+
+        // 新接口没有预警信息，直接隐藏预警区域
         if (this.warningEl) {
-            if (warningText) {
-                this.warningEl.innerHTML = t('weather_warning', { warning: warningText });
-                this.warningEl.hidden = false;
-            } else {
-                this.warningEl.hidden = true;
-                this.warningEl.textContent = '';
-            }
+            this.warningEl.hidden = true;
+            this.warningEl.textContent = '';
         }
     }
 
@@ -414,7 +450,8 @@ class WeatherWidget {
         if (this.rangeEl) this.rangeEl.innerHTML = t('weather_high_low', { high: '--', low: '--' });
         if (this.humidityEl) this.humidityEl.innerHTML = t('weather_humidity', { humidity: '--' });
         if (this.windEl) this.windEl.innerHTML = t('weather_wind', { wind: '--' });
-        if (this.updatedEl) this.updatedEl.textContent = t('weather_updated', { time: '--' });
+        if (this.feelsLikeEl) this.feelsLikeEl.innerHTML = t('weather_feels_like', { feelsLike: '--' });
+        if (this.visibilityEl) this.visibilityEl.innerHTML = t('weather_visibility', { visibility: '--' });
         if (this.warningEl) {
             this.warningEl.hidden = true;
             this.warningEl.textContent = '';
@@ -439,15 +476,11 @@ class HashRouter {
         this.routes = routes;
         this.currentRoute = null;
         this.defaultRoute = defaultRoute;
-        this.isAnimating = false;
-
         this.init();
     }
 
     init() {
         window.addEventListener('hashchange', () => this.handleRouteChange());
-
-        // 页面加载时初始化路由
         if (!window.location.hash) {
             window.location.hash = `#${this.defaultRoute}`;
         } else {
@@ -457,14 +490,7 @@ class HashRouter {
 
     handleRouteChange() {
         let hash = window.location.hash.replace('#', '');
-
-        // 如果输入的路由不存在，则回退到默认路由
-        if (!this.routes.includes(hash)) {
-            hash = this.defaultRoute;
-            window.location.hash = `#${hash}`;
-            return;
-        }
-
+        if (!this.routes.includes(hash)) hash = this.defaultRoute;
         if (hash === this.currentRoute) return;
 
         this.transitionPage(this.currentRoute, hash);
@@ -476,54 +502,49 @@ class HashRouter {
         const newPage = document.getElementById(newRoute);
         const oldPage = oldRoute ? document.getElementById(oldRoute) : null;
 
-        this.isAnimating = true;
-
         if (oldPage) {
-            // 离场动画
             gsap.to(oldPage.querySelectorAll('.animate-pop'), {
-                scale: 0.9,
                 opacity: 0,
-                duration: 0.3,
+                filter: "blur(20px)",
+                scale: 0.9,
+                y: -20,
+                duration: 0.4,
                 stagger: 0.05,
-                ease: "power2.in",
                 onComplete: () => {
                     oldPage.style.display = 'none';
                     this.enterPage(newPage);
                 }
             });
         } else {
-            // 初次加载，直接入场
             this.enterPage(newPage);
         }
     }
 
     enterPage(pageElement) {
         pageElement.style.display = 'grid';
-
-        // 还原动画初始状态然后入场
+        // 模糊->清晰，收缩->正常的进场效果，非常有电影感
         gsap.fromTo(pageElement.querySelectorAll('.animate-pop'),
-            { scale: 0.8, opacity: 0 },
             {
-                scale: 1,
+                opacity: 0,
+                filter: "blur(30px)",
+                scale: 1.1,
+                y: 30
+            },
+            {
                 opacity: 1,
-                duration: 0.8,
+                filter: "blur(0px)",
+                scale: 1,
+                y: 0,
+                duration: 1.2,
                 stagger: 0.1,
-                ease: "elastic.out(1, 0.8)",
-                onComplete: () => {
-                    this.isAnimating = false;
-                }
+                ease: "expo.out"
             }
         );
     }
 
     updateDockState(activeRoute) {
-        const dockButtons = document.querySelectorAll('#dock mdui-button-icon');
-        dockButtons.forEach(btn => {
-            if (btn.getAttribute('data-route') === activeRoute) {
-                btn.setAttribute('variant', 'filled');
-            } else {
-                btn.setAttribute('variant', 'text');
-            }
+        document.querySelectorAll('#dock mdui-button-icon').forEach(btn => {
+            btn.setAttribute('variant', btn.getAttribute('data-route') === activeRoute ? 'filled' : 'text');
         });
     }
 }
@@ -536,6 +557,7 @@ class BentoApp {
         this.setupTheme();
         this.setupEntrance();
 
+        this.visualEngine = new VisualEngine();
         this.themeManager = new ThemeManager();
         this.blogLoader = new BlogLoader();
         this.labLoader = new LabLoader();
