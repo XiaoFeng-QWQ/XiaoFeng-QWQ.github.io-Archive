@@ -20,7 +20,7 @@
             --accent: #8b3a2a;
             --accent-soft: #c17a5c;
             --border: #e0d6c8;
-            --border-light: #ebe3d7;
+            --border-light: #d6cec0; /* 颜色加深，增强结构感 */
             --green-mark: #5a7a62;
             --input-bg: #fdfbf7;
             --radius-lg: 6px;
@@ -264,6 +264,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 0.6rem;
+            align-items: center;
         }
         .post-tag {
             background: var(--border-light);
@@ -408,7 +409,7 @@
             font-size: 0.92rem;
             margin: 0.3rem 0;
         }
-        .reply-btn {
+        .reply-btn, .quote-btn {
             background: none;
             border: none;
             color: var(--accent-soft);
@@ -416,8 +417,11 @@
             cursor: pointer;
             padding: 0;
             margin-right: 0.6rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
         }
-        .reply-btn:hover {
+        .reply-btn:hover, .quote-btn:hover {
             text-decoration: underline;
         }
         .expand-replies {
@@ -430,6 +434,10 @@
             padding: 0.15rem 0;
             margin-top: 0.3rem;
             display: inline-block;
+        }
+        /* 修复折叠 Bug */
+        .hidden-replies {
+            display: none;
         }
         .form-group {
             margin-bottom: 1rem;
@@ -894,6 +902,13 @@
             return `https://cn.cravatar.com/avatar/${hash}?s=40&d=identicon`;
         }
 
+        // 获取用户等级头衔
+        function getUserTitle(postCount) {
+            if (postCount >= 20) return '资深社员';
+            if (postCount >= 5) return '中级社员';
+            return '新手上路';
+        }
+
         // ==================== 状态与配置 ====================
         const state = {
             currentUser: null, // { username, signature }
@@ -953,6 +968,8 @@
                 updatedAt: new Date(Date.now() - 3600000).toISOString(),
                 likedBy: ['南风', '青崖'],
                 collectedBy: ['青崖'],
+                isPinned: true,  // 置顶演示
+                isLocked: false,
                 comments: [
                     { id: 'c1', parentId: null, author: '青崖', content: '我也有一本旧版《楚辞》，每次翻开都有墨香。', createdAt: new Date(
                             Date.now() - 2000000).toISOString() },
@@ -978,6 +995,8 @@
                 updatedAt: new Date(Date.now() - 7200000).toISOString(),
                 likedBy: [],
                 collectedBy: [],
+                isPinned: false,
+                isLocked: false,
                 comments: [
                     { id: 'c7', parentId: null, author: '南风', content: '好喜欢这种克制。', createdAt: new Date().toISOString() }
                 ]
@@ -992,6 +1011,8 @@
                 updatedAt: new Date(Date.now() - 10800000).toISOString(),
                 likedBy: ['南风'],
                 collectedBy: [],
+                isPinned: false,
+                isLocked: true, // 锁定演示
                 comments: []
             }];
             savePosts();
@@ -1003,7 +1024,7 @@
             getPostById(id) { return state.posts.find(p => p.id == id) || null; },
             addPost(postData) {
                 const newPost = { id: Date.now(), ...postData, likedBy: [], collectedBy: [], comments: [],
-                    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+                    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), isPinned: false, isLocked: false };
                 state.posts.unshift(newPost);
                 savePosts();
                 return newPost;
@@ -1164,7 +1185,33 @@
                     </div>
                 `;
             }).join('');
+
+            // 统计面板数据
+            const totalPosts = posts.length;
+            const todayPosts = posts.filter(p => new Date(p.createdAt).toDateString() === new Date().toDateString()).length;
+            const users = [...new Set(posts.map(p => p.author))];
+            const totalUsers = users.length;
+
             return `
+                <!-- 统计面板 (提升社区感) -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.8rem; margin-bottom: 1.8rem;">
+                    <div class="card" style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.3rem;">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="var(--accent-soft)"><path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2z"/></svg>
+                        <span style="font-weight: 600; font-size: 1.2rem;">${totalPosts}</span>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">总贴</span>
+                    </div>
+                    <div class="card" style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.3rem;">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="var(--accent-soft)"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                        <span style="font-weight: 600; font-size: 1.2rem;">${todayPosts}</span>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">今日</span>
+                    </div>
+                    <div class="card" style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.3rem;">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="var(--accent-soft)"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                        <span style="font-weight: 600; font-size: 1.2rem;">${totalUsers}</span>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">社员</span>
+                    </div>
+                </div>
+
                 <h2 style="font-weight:580; margin-bottom:0.8rem;">板块</h2>
                 <div class="board-grid">${cards}</div>
             `;
@@ -1187,16 +1234,30 @@
                 const preview = p.content.replace(/[#*>`]/g, '').slice(0, 80);
                 const commentIcon =
                     `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>`;
+                
+                // 论坛状态图标
+                const statusIcons = `
+                    ${p.isPinned ? `<svg viewBox="0 0 24 24" width="16" height="16" fill="var(--accent)" style="margin-right:4px;"><path d="M16 12V4h1V2H7v2h1v8l-2.5 3.5V16h5.2l.8 6h1.1l.8-6H19v-2.5L16 12z"/></svg>` : ''}
+                    ${p.isLocked ? `<svg viewBox="0 0 24 24" width="16" height="16" fill="var(--text-muted)" style="margin-right:4px;"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>` : ''}
+                `;
+
+                // 等级头衔
+                const authorPostCount = state.posts.filter(pp => pp.author === p.author).length;
+                const userTitle = getUserTitle(authorPostCount);
+
                 return `
                     <div class="post-item" data-id="${p.id}">
                         <img class="post-avatar" src="${avatarUrl(p.author)}" alt="${escapeHtml(p.author)}">
                         <div class="post-body">
                             <div style="display:flex; justify-content:space-between;">
-                                <span class="post-title">${escapeHtml(p.title)}</span>
+                                <span class="post-title">${statusIcons} ${escapeHtml(p.title)}</span>
                                 <span class="post-index">#${String(idx+1).padStart(2,'0')}</span>
                             </div>
                             <div class="post-meta">
                                 <span>${escapeHtml(p.author)}</span>
+                                <!-- 等级标签 -->
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="var(--accent-soft)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                <span style="font-size: 0.7rem; background: var(--border-light); padding: 0 0.4rem; border-radius: 3px;">${userTitle}</span>
                                 <span>·</span>
                                 <span>${timeAgo(p.createdAt)}</span>
                                 ${p.tags.map(t=>`<span class="post-tag">${escapeHtml(t)}</span>`).join('')}
@@ -1295,7 +1356,13 @@
                             <span class="comment-time">${timeAgo(comment.createdAt)}</span>
                         </div>
                         <div class="comment-body">${escapeHtml(comment.content)}</div>
-                        <button class="reply-btn" data-reply-to="${comment.id}">回复</button>
+                        <div style="display:flex; gap:0.5rem; align-items:center;">
+                            <button class="reply-btn" data-reply-to="${comment.id}">回复</button>
+                            <button class="quote-btn" data-reply-to="${comment.id}" data-content="${escapeHtml(comment.content)}">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M14.447 6.105l-1.97 2.84c.437.6.723 1.313.723 2.055 0 1.64-1.34 3-3 3-1.66 0-3-1.36-3-3 0-2.7 2.36-5.03 5.23-5.66l1.017-1.17L14.447 6.105zm-8 0l-1.97 2.84c.437.6.723 1.313.723 2.055 0 1.64-1.34 3-3 3-1.66 0-3-1.36-3-3 0-2.7 2.36-5.03 5.23-5.66l1.017-1.17L6.447 6.105z"/></svg>
+                                引用
+                            </button>
+                        </div>
                         <div class="reply-box" id="replyBox-${comment.id}" style="display:none; margin:0.5rem 0;">
                             <textarea rows="2" style="width:100%; padding:0.4rem;" placeholder="回复 ${escapeHtml(comment.author)}..."></textarea>
                             <button class="btn btn-primary btn-sm submit-reply" data-parent="${comment.id}" style="margin-top:0.3rem;">提交</button>
@@ -1699,6 +1766,21 @@
                     const commentId = btn.dataset.replyTo;
                     const box = document.getElementById(`replyBox-${commentId}`);
                     if (box) box.style.display = 'block';
+                });
+            });
+            // 引用按钮事件（新增）
+            $$('.quote-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const commentId = btn.dataset.replyTo;
+                    const content = btn.dataset.content;
+                    const box = document.getElementById(`replyBox-${commentId}`);
+                    if (box) {
+                        box.style.display = 'block';
+                        const textarea = box.querySelector('textarea');
+                        textarea.value = `> ${content}\n\n`;
+                        textarea.focus();
+                    }
                 });
             });
             $$('.submit-reply').forEach(btn => {
