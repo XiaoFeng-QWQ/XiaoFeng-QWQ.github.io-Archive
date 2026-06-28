@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>暖风论坛 · 温暖的文字栖息地</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js">
+    </script>
+    <style>
+        /* ===== CSS Variables ===== */
+        :root {
+            --bg: #f4efe8;
+            --card: #faf7f2;
+            --card-hover: #fefcf8;
+            --text: #2c2318;
+            --text-secondary: #6b5c4a;
+            --text-muted: #9a8b78;
+            --accent: #8b3a2a;
+            --accent-soft: #c17a5c;
+            --border: #e0d6c8;
+            --border-light: #ebe3d7;
+            --green-mark: #5a7a62;
+            --input-bg: #fdfbf7;
+            --radius-lg: 6px;
+            --comment-nested-margin: 1.6rem;
+            --font-sans: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+            --font-mono: 'SF Mono', 'Cascadia Code', 'Consolas', 'Menlo', 'Monaco', 'Courier New', monospace;
+            --shadow-sm: 0 1px 3px rgba(44, 35, 24, 0.04);
+            --transition-duration: 220ms;
+            --transition-ease: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        /* ===== Reset & Base ===== */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        html {
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+        }
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.65;
+            min-height: 100vh;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e0d6c8' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+        button,
+        input,
+        textarea,
+        select {
+            font-family: inherit;
+        }
+        .app-shell {
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 0 1.2rem 2.5rem;
+        }
+        .main-container {
+            opacity: 0;
+            transform: translateY(18px) scale(0.97);
+            transition: opacity var(--transition-duration) var(--transition-ease),
+                transform var(--transition-duration) var(--transition-ease);
+            will-change: opacity, transform;
+            min-height: 40vh;
+        }
+        .main-container.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        .main-container:not(.visible) {
+            opacity: 0;
+            transform: translateY(-12px) scale(0.97);
+        }
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            backdrop-filter: blur(6px);
+            background-color: rgba(250, 247, 242, 0.92);
+            border-bottom: 1px solid var(--border-light);
+            padding: 0.7rem 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.8rem;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: var(--font-mono);
+            font-size: 1.25rem;
+            font-weight: 540;
+            letter-spacing: -0.3px;
+            color: var(--text);
+        }
+        .brand svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--accent);
+        }
+        .nav-links {
+            display: flex;
+            gap: 1.2rem;
+            align-items: center;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        .nav-links a:hover {
+            color: var(--accent);
+        }
+        .nav-user {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        .nav-user a {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .avatar-sm {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background-color: var(--border);
+            object-fit: cover;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+            border-radius: var(--radius-lg);
+            font-size: 0.85rem;
+            padding: 0.45rem 0.9rem;
+            transition: background 0.2s, color 0.2s, border-color 0.2s;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        .btn-primary {
+            background-color: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        .btn-primary:hover {
+            background-color: #7a3224;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+        .btn-outline:hover {
+            border-color: var(--accent-soft);
+            color: var(--accent);
+        }
+        .btn-ghost {
+            background: transparent;
+            border-color: transparent;
+            color: var(--text-secondary);
+            padding: 0.2rem 0.5rem;
+        }
+        .btn-ghost:hover {
+            color: var(--accent);
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.4rem;
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+            box-shadow: var(--shadow-sm);
+        }
+        .card:hover {
+            border-color: var(--accent-soft);
+            box-shadow: 0 4px 8px rgba(44, 35, 24, 0.05);
+        }
+        .board-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 0.8rem;
+            margin-top: 0.5rem;
+        }
+        .board-card {
+            background: var(--card);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            padding: 1.2rem 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .board-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-soft);
+        }
+        .board-name {
+            font-weight: 580;
+            font-size: 1.1rem;
+        }
+        .board-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.4rem;
+        }
+        .post-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+        .post-item {
+            background: var(--card);
+            border: 1px solid var(--border-light);
+            border-left: 3px solid transparent;
+            border-radius: var(--radius-lg);
+            padding: 1rem 1.2rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.9rem;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+        .post-item:hover {
+            border-left-color: var(--accent-soft);
+            transform: translateX(2px);
+        }
+        .post-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--border);
+            flex-shrink: 0;
+        }
+        .post-body {
+            flex: 1;
+            min-width: 0;
+        }
+        .post-title {
+            font-weight: 580;
+            font-size: 1.05rem;
+            line-height: 1.35;
+        }
+        .post-meta {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+        }
+        .post-tag {
+            background: var(--border-light);
+            color: var(--text-secondary);
+            padding: 0.1rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.7rem;
+        }
+        .post-index {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-left: auto;
+            white-space: nowrap;
+        }
+        .post-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+            transition: color 0.15s;
+        }
+        .action-btn:hover {
+            color: var(--accent);
+        }
+        .action-btn.active {
+            color: var(--accent);
+        }
+        .action-btn svg {
+            width: 15px;
+            height: 15px;
+            flex-shrink: 0;
+        }
+        .stat-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+            cursor: default;
+            user-select: none;
+        }
+        .stat-btn svg {
+            width: 15px;
+            height: 15px;
+            flex-shrink: 0;
+        }
+        .post-detail {
+            background: var(--card);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            padding: 1.6rem;
+        }
+        .post-content {
+            margin: 1.2rem 0;
+            line-height: 1.7;
+        }
+        .post-content code {
+            background: #f0ece4;
+            padding: 0.15em 0.4em;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-family: var(--font-mono);
+        }
+        .post-content blockquote {
+            border-left: 3px solid var(--accent-soft);
+            padding-left: 1rem;
+            color: var(--text-secondary);
+            margin: 0.8rem 0;
+        }
+        .detail-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.2rem;
+            padding-top: 0.8rem;
+            border-top: 1px solid var(--border-light);
+        }
+        .comments-section {
+            margin-top: 1.8rem;
+        }
+        .comment-form {
+            margin-bottom: 1.5rem;
+        }
+        .comment-form textarea {
+            width: 100%;
+            min-height: 80px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 0.7rem;
+            font-size: 0.9rem;
+            resize: vertical;
+            margin-bottom: 0.6rem;
+        }
+        .comment {
+            position: relative;
+            padding: 0.6rem 0 0.6rem 0;
+            margin-left: 0;
+        }
+        .comment.nested {
+            margin-left: var(--comment-nested-margin);
+            border-left: 1px dashed var(--border);
+            padding-left: 0.9rem;
+        }
+        .comment-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.2rem;
+        }
+        .comment-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--border);
+        }
+        .comment-author {
+            font-weight: 580;
+            font-size: 0.85rem;
+        }
+        .comment-time {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+        .comment-body {
+            font-size: 0.92rem;
+            margin: 0.3rem 0;
+        }
+        .reply-btn {
+            background: none;
+            border: none;
+            color: var(--accent-soft);
+            font-size: 0.78rem;
+            cursor: pointer;
+            padding: 0;
+            margin-right: 0.6rem;
+        }
+        .reply-btn:hover {
+            text-decoration: underline;
+        }
+        .expand-replies {
+            color: var(--accent-soft);
+            font-size: 0.8rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            border-bottom: 1px dashed var(--accent-soft);
+            padding: 0.15rem 0;
+            margin-top: 0.3rem;
+            display: inline-block;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+            color: var(--text-secondary);
+        }
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 0.6rem 0.8rem;
+            font-size: 0.95rem;
+        }
+        .form-textarea {
+            min-height: 180px;
+            resize: vertical;
+        }
+        .preview-box {
+            min-height: 180px;
+            padding: 0.8rem;
+            background: var(--card);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+        }
+        .search-bar {
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding: 0.5rem 0.2rem;
+            margin-bottom: 1rem;
+        }
+        .search-bar svg {
+            width: 18px;
+            height: 18px;
+            color: var(--text-muted);
+            margin-right: 0.4rem;
+        }
+        .search-bar input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 0.95rem;
+            outline: none;
+        }
+        .sort-group {
+            display: flex;
+            gap: 0.4rem;
+            margin-bottom: 1rem;
+        }
+        .sort-btn {
+            background: none;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            padding: 0.3rem 0.8rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+        .sort-btn.active {
+            background: var(--accent-soft);
+            color: white;
+            border-color: var(--accent-soft);
+        }
+        .toast-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .toast {
+            padding: 0.65rem 1.2rem;
+            border-radius: var(--radius-lg);
+            color: white;
+            font-size: 0.85rem;
+            animation: slideIn 260ms ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .toast.success {
+            background: var(--green-mark);
+        }
+        .toast.error {
+            background: #b15341;
+        }
+        .toast.info {
+            background: #5f6b7a;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        /* ===== 个人主页样式 ===== */
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 1.5rem 0;
+            border-bottom: 1px solid var(--border-light);
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .profile-avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: var(--border);
+            flex-shrink: 0;
+        }
+        .profile-info {
+            flex: 1;
+        }
+        .profile-info h1 {
+            font-size: 1.5rem;
+            font-weight: 580;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+        .profile-info .signature {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 0.2rem;
+            font-style: italic;
+        }
+        .profile-info .stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 0.3rem;
+        }
+        .profile-info .stats span {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .profile-info .stats svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+        .profile-actions {
+            margin-top: 0.5rem;
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+        .profile-tabs {
+            display: flex;
+            gap: 1rem;
+            border-bottom: 1px solid var(--border-light);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.2rem;
+            flex-wrap: wrap;
+        }
+        .profile-tabs button {
+            background: none;
+            border: none;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            padding: 0.3rem 0.6rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: color 0.15s, border-color 0.15s;
+        }
+        .profile-tabs button.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+        .profile-tabs button:hover {
+            color: var(--accent);
+        }
+        .comment-item {
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 0.92rem;
+        }
+        .comment-item:last-child {
+            border-bottom: none;
+        }
+        .comment-item .post-ref {
+            color: var(--accent-soft);
+            font-size: 0.85rem;
+        }
+        .comment-item .post-ref:hover {
+            text-decoration: underline;
+        }
+        .comment-item .comment-meta {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 0.1rem;
+        }
+        .comment-item .comment-content {
+            margin: 0.2rem 0;
+        }
+        .edit-profile-form {
+            margin-top: 1rem;
+            padding: 1rem 0;
+            border-top: 1px solid var(--border-light);
+        }
+        @media (max-width: 640px) {
+            .app-shell {
+                padding: 0 0.8rem 2rem;
+            }
+            .board-grid {
+                grid-template-columns: 1fr;
+            }
+            .post-item {
+                flex-direction: column;
+            }
+            .comment.nested {
+                margin-left: 0.8rem;
+            }
+            .profile-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <a href="#/" class="brand" aria-label="暖风论坛首页">
+            <svg viewBox="0 0 24 24" width="20" height="20"><polygon points="12,2 22,12 12,22 2,12" fill="var(--accent)"/></svg>
+            暖风
+        </a>
+        <nav class="nav-links" id="navLinks"></nav>
+    </header>
+    <main class="app-shell">
+        <div id="app" class="main-container"></div>
+    </main>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script type="module">
+        // ==================== MD5 (健壮版) ====================
+        function md5(string) {
+            if (typeof string !== 'string') string = String(string || '');
+            function RotateLeft(lValue, iShiftBits) { return (lValue << iShiftBits) | (lValue >>> (32 - iShiftBits)); }
+
+            function AddUnsigned(lX, lY) {
+                var lX4, lY4, lX8, lY8, lResult;
+                lX8 = (lX & 0x80000000);
+                lY8 = (lY & 0x80000000);
+                lX4 = (lX & 0x40000000);
+                lY4 = (lY & 0x40000000);
+                lResult = (lX & 0x3FFFFFFF) + (lY & 0x3FFFFFFF);
+                if (lX4 & lY4) return (lResult ^ 0x80000000 ^ lX8 ^ lY8) >>> 0;
+                if (lX4 | lY4) {
+                    if (lResult & 0x40000000) return (lResult ^ 0xC0000000 ^ lX8 ^ lY8) >>> 0;
+                    else return (lResult ^ 0x40000000 ^ lX8 ^ lY8) >>> 0;
+                } else return (lResult ^ lX8 ^ lY8) >>> 0;
+            }
+
+            function F(x, y, z) { return (x & y) | ((~x) & z); }
+
+            function G(x, y, z) { return (x & z) | (y & (~z)); }
+
+            function H(x, y, z) { return (x ^ y ^ z); }
+
+            function I(x, y, z) { return (y ^ (x | (~z))); }
+
+            function FF(a, b, c, d, x, s, ac) { a = AddUnsigned(a, AddUnsigned(AddUnsigned(F(b, c, d), x), ac)); return AddUnsigned(
+                    RotateLeft(a, s), b); }
+
+            function GG(a, b, c, d, x, s, ac) { a = AddUnsigned(a, AddUnsigned(AddUnsigned(G(b, c, d), x), ac)); return AddUnsigned(
+                    RotateLeft(a, s), b); }
+
+            function HH(a, b, c, d, x, s, ac) { a = AddUnsigned(a, AddUnsigned(AddUnsigned(H(b, c, d), x), ac)); return AddUnsigned(
+                    RotateLeft(a, s), b); }
+
+            function II(a, b, c, d, x, s, ac) { a = AddUnsigned(a, AddUnsigned(AddUnsigned(I(b, c, d), x), ac)); return AddUnsigned(
+                    RotateLeft(a, s), b); }
+
+            function ConvertToWordArray(str) {
+                var lWordCount, lMessageLength = str.length,
+                    lNumberOfWords_temp1 = lMessageLength + 8,
+                    lNumberOfWords_temp2 = (lNumberOfWords_temp1 - (lNumberOfWords_temp1 % 64)) / 64,
+                    lNumberOfWords = (lNumberOfWords_temp2 + 1) * 16,
+                    lWordArray = Array(lNumberOfWords - 1),
+                    lBytePosition = 0,
+                    lByteCount = 0;
+                while (lByteCount < lMessageLength) {
+                    lWordCount = (lByteCount - (lByteCount % 4)) / 4;
+                    lBytePosition = (lByteCount % 4) * 8;
+                    lWordArray[lWordCount] = (lWordArray[lWordCount] | (str.charCodeAt(lByteCount) << lBytePosition));
+                    lByteCount++;
+                }
+                lWordCount = (lByteCount - (lByteCount % 4)) / 4;
+                lBytePosition = (lByteCount % 4) * 8;
+                lWordArray[lWordCount] = lWordArray[lWordCount] | (0x80 << lBytePosition);
+                lWordArray[lNumberOfWords - 2] = lMessageLength << 3;
+                lWordArray[lNumberOfWords - 1] = lMessageLength >>> 29;
+                return lWordArray;
+            }
+
+            function WordToHex(lValue) {
+                var val = (lValue >>> 0),
+                    hex = "";
+                for (var i = 0; i < 4; i++) {
+                    var byte = (val >>> (i * 8)) & 0xFF;
+                    hex += ("0" + byte.toString(16)).slice(-2);
+                }
+                return hex;
+            }
+
+            function Utf8Encode(str) {
+                str = str.replace(/\r\n/g, "\n");
+                var utftext = "";
+                for (var n = 0; n < str.length; n++) {
+                    var c = str.charCodeAt(n);
+                    if (c < 128) utftext += String.fromCharCode(c);
+                    else if ((c > 127) && (c < 2048)) {
+                        utftext += String.fromCharCode((c >> 6) | 192);
+                        utftext += String.fromCharCode((c & 63) | 128);
+                    } else {
+                        utftext += String.fromCharCode((c >> 12) | 224);
+                        utftext += String.fromCharCode(((c >> 6) & 63) | 128);
+                        utftext += String.fromCharCode((c & 63) | 128);
+                    }
+                }
+                return utftext;
+            }
+            var x = [],
+                k, AA, BB, CC, DD, a, b, c, d;
+            var S11 = 7,
+                S12 = 12,
+                S13 = 17,
+                S14 = 22,
+                S21 = 5,
+                S22 = 9,
+                S23 = 14,
+                S24 = 20,
+                S31 = 4,
+                S32 = 11,
+                S33 = 16,
+                S34 = 23,
+                S41 = 6,
+                S42 = 10,
+                S43 = 15,
+                S44 = 21;
+            var encoded = Utf8Encode(string);
+            x = ConvertToWordArray(encoded);
+            a = 0x67452301;
+            b = 0xEFCDAB89;
+            c = 0x98BADCFE;
+            d = 0x10325476;
+            for (k = 0; k < x.length; k += 16) {
+                AA = a;
+                BB = b;
+                CC = c;
+                DD = d;
+                a = FF(a, b, c, d, x[k + 0], S11, 0xD76AA478);
+                d = FF(d, a, b, c, x[k + 1], S12, 0xE8C7B756);
+                c = FF(c, d, a, b, x[k + 2], S13, 0x242070DB);
+                b = FF(b, c, d, a, x[k + 3], S14, 0xC1BDCEEE);
+                a = FF(a, b, c, d, x[k + 4], S11, 0xF57C0FAF);
+                d = FF(d, a, b, c, x[k + 5], S12, 0x4787C62A);
+                c = FF(c, d, a, b, x[k + 6], S13, 0xA8304613);
+                b = FF(b, c, d, a, x[k + 7], S14, 0xFD469501);
+                a = FF(a, b, c, d, x[k + 8], S11, 0x698098D8);
+                d = FF(d, a, b, c, x[k + 9], S12, 0x8B44F7AF);
+                c = FF(c, d, a, b, x[k + 10], S13, 0xFFFF5BB1);
+                b = FF(b, c, d, a, x[k + 11], S14, 0x895CD7BE);
+                a = FF(a, b, c, d, x[k + 12], S11, 0x6B901122);
+                d = FF(d, a, b, c, x[k + 13], S12, 0xFD987193);
+                c = FF(c, d, a, b, x[k + 14], S13, 0xA679438E);
+                b = FF(b, c, d, a, x[k + 15], S14, 0x49B40821);
+                a = GG(a, b, c, d, x[k + 1], S21, 0xF61E2562);
+                d = GG(d, a, b, c, x[k + 6], S22, 0xC040B340);
+                c = GG(c, d, a, b, x[k + 11], S23, 0x265E5A51);
+                b = GG(b, c, d, a, x[k + 0], S24, 0xE9B6C7AA);
+                a = GG(a, b, c, d, x[k + 5], S21, 0xD62F105D);
+                d = GG(d, a, b, c, x[k + 10], S22, 0x2441453);
+                c = GG(c, d, a, b, x[k + 15], S23, 0xD8A1E681);
+                b = GG(b, c, d, a, x[k + 4], S24, 0xE7D3FBC8);
+                a = GG(a, b, c, d, x[k + 9], S21, 0x21E1CDE6);
+                d = GG(d, a, b, c, x[k + 14], S22, 0xC33707D6);
+                c = GG(c, d, a, b, x[k + 3], S23, 0xF4D50D87);
+                b = GG(b, c, d, a, x[k + 8], S24, 0x455A14ED);
+                a = GG(a, b, c, d, x[k + 13], S21, 0xA9E3E905);
+                d = GG(d, a, b, c, x[k + 2], S22, 0xFCEFA3F8);
+                c = GG(c, d, a, b, x[k + 7], S23, 0x676F02D9);
+                b = GG(b, c, d, a, x[k + 12], S24, 0x8D2A4C8A);
+                a = HH(a, b, c, d, x[k + 5], S31, 0xFFFA3942);
+                d = HH(d, a, b, c, x[k + 8], S32, 0x8771F681);
+                c = HH(c, d, a, b, x[k + 11], S33, 0x6D9D6122);
+                b = HH(b, c, d, a, x[k + 14], S34, 0xFDE5380C);
+                a = HH(a, b, c, d, x[k + 1], S31, 0xA4BEEA44);
+                d = HH(d, a, b, c, x[k + 4], S32, 0x4BDECFA9);
+                c = HH(c, d, a, b, x[k + 7], S33, 0xF6BB4B60);
+                b = HH(b, c, d, a, x[k + 10], S34, 0xBEBFBC70);
+                a = HH(a, b, c, d, x[k + 13], S31, 0x289B7EC6);
+                d = HH(d, a, b, c, x[k + 2], S32, 0xEAA127FA);
+                c = HH(c, d, a, b, x[k + 6], S33, 0xD4EF3085);
+                b = HH(b, c, d, a, x[k + 9], S34, 0x4881D05);
+                a = HH(a, b, c, d, x[k + 0], S31, 0xD9D4D039);
+                d = HH(d, a, b, c, x[k + 3], S32, 0xE6DB99E5);
+                c = HH(c, d, a, b, x[k + 12], S33, 0x1FA27CF8);
+                b = HH(b, c, d, a, x[k + 15], S34, 0xC4AC5665);
+                a = II(a, b, c, d, x[k + 0], S41, 0xF4292244);
+                d = II(d, a, b, c, x[k + 7], S42, 0x432AFF97);
+                c = II(c, d, a, b, x[k + 14], S43, 0xAB9423A7);
+                b = II(b, c, d, a, x[k + 5], S44, 0xFC93A039);
+                a = II(a, b, c, d, x[k + 12], S41, 0x655B59C3);
+                d = II(d, a, b, c, x[k + 3], S42, 0x8F0CCC92);
+                c = II(c, d, a, b, x[k + 10], S43, 0xFFEFF47D);
+                b = II(b, c, d, a, x[k + 1], S44, 0x85845DD1);
+                a = II(a, b, c, d, x[k + 8], S41, 0x6FA87E4F);
+                d = II(d, a, b, c, x[k + 15], S42, 0xFE2CE6E0);
+                c = II(c, d, a, b, x[k + 6], S43, 0xA3014314);
+                b = II(b, c, d, a, x[k + 13], S44, 0x4E0811A1);
+                a = II(a, b, c, d, x[k + 4], S41, 0xF7537E82);
+                d = II(d, a, b, c, x[k + 11], S42, 0xBD3AF235);
+                c = II(c, d, a, b, x[k + 2], S43, 0x2AD7D2BB);
+                b = II(b, c, d, a, x[k + 9], S44, 0xEB86D391);
+                a = AddUnsigned(a, AA);
+                b = AddUnsigned(b, BB);
+                c = AddUnsigned(c, CC);
+                d = AddUnsigned(d, DD);
+            }
+            var temp = WordToHex(a) + WordToHex(b) + WordToHex(c) + WordToHex(d);
+            return String(temp).toLowerCase();
+        }
+
+        // ==================== 工具 ====================
+        const $ = (sel, ctx = document) => ctx.querySelector(sel);
+        const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
+        const escapeHtml = (str) => { const div = document.createElement('div');
+            div.textContent = str; return div.innerHTML; };
+        const toastContainer = document.getElementById('toastContainer');
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            toastContainer.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 2200);
+        }
+
+        function avatarUrl(username) {
+            if (typeof username !== 'string' || username === null || username === undefined) username = 'default';
+            const clean = username.trim().toLowerCase() || 'default';
+            const hash = md5(clean);
+            return `https://cn.cravatar.com/avatar/${hash}?s=40&d=identicon`;
+        }
+
+        // ==================== 状态与配置 ====================
+        const state = {
+            currentUser: null, // { username, signature }
+            route: { page: 'home', params: {} },
+            sort: 'latest',
+            searchQuery: '',
+            posts: [],
+            profileTab: 'posts',
+            isEditingProfile: false, // 用于控制编辑表单显示
+        };
+        let isTransitioning = false;
+
+        function loadState() {
+            const savedPosts = localStorage.getItem('warmwind_posts');
+            if (savedPosts) {
+                try { state.posts = JSON.parse(savedPosts); } catch (e) {}
+            }
+            if (!state.posts.length) seedData();
+            const savedUser = localStorage.getItem('warmwind_user');
+            if (savedUser) {
+                try {
+                    const parsed = JSON.parse(savedUser);
+                    // 兼容旧格式：只有 username
+                    state.currentUser = typeof parsed === 'string' ? { username: parsed, signature: '' } : parsed;
+                } catch (e) {}
+            }
+        }
+
+        function saveUser() {
+            localStorage.setItem('warmwind_user', JSON.stringify(state.currentUser));
+        }
+
+        function savePosts() {
+            localStorage.setItem('warmwind_posts', JSON.stringify(state.posts));
+        }
+
+        function loginUser(username) {
+            state.currentUser = { username, signature: '' };
+            saveUser();
+        }
+
+        function logoutUser() {
+            state.currentUser = null;
+            localStorage.removeItem('warmwind_user');
+        }
+
+        function seedData() {
+            const now = new Date().toISOString();
+            state.posts = [{
+                id: 1,
+                title: '傍晚的光与旧书',
+                content: '整理书架时翻到一本泛黄的《诗经》，**暮色**透过百叶窗落在字句上，忽然觉得时间变得很慢。\n\n> 昔我往矣，杨柳依依。\n\n有些句子，永远年轻。',
+                author: '南风',
+                board: 'reading',
+                tags: ['读书', '随笔'],
+                createdAt: new Date(Date.now() - 3600000).toISOString(),
+                updatedAt: new Date(Date.now() - 3600000).toISOString(),
+                likedBy: ['南风', '青崖'],
+                collectedBy: ['青崖'],
+                comments: [
+                    { id: 'c1', parentId: null, author: '青崖', content: '我也有一本旧版《楚辞》，每次翻开都有墨香。', createdAt: new Date(
+                            Date.now() - 2000000).toISOString() },
+                    { id: 'c2', parentId: 'c1', author: '南风', content: '墨香是时间的味道吧。', createdAt: new Date(Date.now() -
+                            1500000).toISOString() },
+                    { id: 'c3', parentId: 'c1', author: '白榆', content: '请问是哪家出版社的版本？', createdAt: new Date(Date.now() -
+                            1000000).toISOString() },
+                    { id: 'c4', parentId: null, author: '白榆', content: '傍晚的光线拍下来一定很美。', createdAt: new Date(Date.now() -
+                            500000).toISOString() },
+                    { id: 'c5', parentId: 'c4', author: 'awa', content: '对对对', createdAt: new Date(Date.now() -
+                            60000).toISOString() },
+                    { id: 'c6', parentId: 'c4', author: 'awa', content: '4', createdAt: new Date(Date.now() -
+                            10000).toISOString() },
+                ]
+            }, {
+                id: 2,
+                title: '搭建一个安静的博客',
+                content: '用纯静态页面和一点点 JavaScript 搭了个博客。没有评论数、没有阅读量，只有文字和呼吸感。',
+                author: '青崖',
+                board: 'tech',
+                tags: ['前端', '博客'],
+                createdAt: new Date(Date.now() - 7200000).toISOString(),
+                updatedAt: new Date(Date.now() - 7200000).toISOString(),
+                likedBy: [],
+                collectedBy: [],
+                comments: [
+                    { id: 'c7', parentId: null, author: '南风', content: '好喜欢这种克制。', createdAt: new Date().toISOString() }
+                ]
+            }, {
+                id: 3,
+                title: '雨后山行',
+                content: '石板路湿漉漉的，空气里有泥土和青草的味道。遇见一只慢悠悠的蜗牛。',
+                author: '白榆',
+                board: 'life',
+                tags: ['自然', '徒步'],
+                createdAt: new Date(Date.now() - 10800000).toISOString(),
+                updatedAt: new Date(Date.now() - 10800000).toISOString(),
+                likedBy: ['南风'],
+                collectedBy: [],
+                comments: []
+            }];
+            savePosts();
+        }
+
+        // ==================== API ====================
+        const API = {
+            getPosts() { return [...state.posts]; },
+            getPostById(id) { return state.posts.find(p => p.id == id) || null; },
+            addPost(postData) {
+                const newPost = { id: Date.now(), ...postData, likedBy: [], collectedBy: [], comments: [],
+                    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+                state.posts.unshift(newPost);
+                savePosts();
+                return newPost;
+            },
+            updatePost(id, updates) {
+                const post = state.posts.find(p => p.id == id);
+                if (!post) return null;
+                Object.assign(post, updates, { updatedAt: new Date().toISOString() });
+                savePosts();
+                return post;
+            },
+            deletePost(id) {
+                state.posts = state.posts.filter(p => p.id != id);
+                savePosts();
+            },
+            toggleLike(postId, username) {
+                const post = state.posts.find(p => p.id == postId);
+                if (!post) return;
+                const idx = post.likedBy.indexOf(username);
+                if (idx > -1) post.likedBy.splice(idx, 1);
+                else post.likedBy.push(username);
+                savePosts();
+            },
+            toggleCollect(postId, username) {
+                const post = state.posts.find(p => p.id == postId);
+                if (!post) return;
+                const idx = post.collectedBy.indexOf(username);
+                if (idx > -1) post.collectedBy.splice(idx, 1);
+                else post.collectedBy.push(username);
+                savePosts();
+            },
+            addComment(postId, parentId, author, content) {
+                const post = state.posts.find(p => p.id == postId);
+                if (!post) return null;
+                const newComment = { id: 'c' + Date.now() + Math.random(), parentId: parentId || null, author, content,
+                    createdAt: new Date().toISOString() };
+                post.comments.push(newComment);
+                savePosts();
+                return newComment;
+            }
+        };
+
+        // ==================== 路由 ====================
+        function parseHash() {
+            const hash = window.location.hash.slice(1) || '/';
+            const parts = hash.split('/').filter(Boolean);
+            if (parts.length === 0) return { page: 'home' };
+            if (parts[0] === 'board' && parts[1]) return { page: 'board', board: parts[1] };
+            if (parts[0] === 'post' && parts[1]) return { page: 'post', id: parseInt(parts[1]) };
+            if (parts[0] === 'new-post') return { page: 'new-post' };
+            if (parts[0] === 'edit-post' && parts[1]) return { page: 'edit-post', id: parseInt(parts[1]) };
+            if (parts[0] === 'user' && parts[1]) return { page: 'user', username: parts[1] };
+            if (parts[0] === 'login') return { page: 'login' };
+            if (parts[0] === 'register') return { page: 'register' };
+            return { page: 'home' };
+        }
+
+        function navigate(hash) { window.location.hash = hash; }
+
+        // ==================== 渲染引擎 ====================
+        const appEl = document.getElementById('app');
+        const navLinksEl = document.getElementById('navLinks');
+
+        function renderApp() {
+            if (isTransitioning) return;
+            isTransitioning = true;
+            updateNav();
+            appEl.classList.remove('visible');
+            const duration = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--transition-duration')) ||
+            220;
+            setTimeout(() => {
+                const route = state.route;
+                let html = '';
+                switch (route.page) {
+                    case 'home':
+                        html = renderHome();
+                        break;
+                    case 'board':
+                        html = renderBoard(route.board);
+                        break;
+                    case 'post':
+                        html = renderPostDetail(route.id);
+                        break;
+                    case 'new-post':
+                        html = renderNewPost();
+                        break;
+                    case 'edit-post':
+                        html = renderEditPost(route.id);
+                        break;
+                    case 'user':
+                        html = renderUserProfile(route.username);
+                        break;
+                    case 'login':
+                        html = renderLogin();
+                        break;
+                    case 'register':
+                        html = renderRegister();
+                        break;
+                    default:
+                        html = renderHome();
+                }
+                appEl.innerHTML = html;
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        appEl.classList.add('visible');
+                        isTransitioning = false;
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                });
+                attachEvents();
+            }, duration + 20);
+        }
+
+        function updateNav() {
+            const user = state.currentUser;
+            navLinksEl.innerHTML = `
+                <a href="#/" class="${state.route.page==='home'?'active':''}">首页</a>
+                <a href="#/new-post">发帖</a>
+                ${user ? `
+                    <span class="nav-user">
+                        <a href="#/user/${encodeURIComponent(user.username)}">
+                            <img class="avatar-sm" src="${avatarUrl(user.username)}" alt="avatar">
+                            <span>${escapeHtml(user.username)}</span>
+                        </a>
+                        <button class="btn-ghost" id="logoutBtn">退出</button>
+                    </span>` : `
+                    <a href="#/login">登录</a>
+                `}
+            `;
+            if (user) {
+                document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    logoutUser();
+                    showToast('已退出登录', 'info');
+                    navigate('/');
+                });
+            }
+        }
+
+        // ==================== 视图组件 ====================
+        function renderHome() {
+            const posts = API.getPosts();
+            const boards = {};
+            posts.forEach(p => {
+                if (!boards[p.board]) boards[p.board] = { count: 0, latest: null };
+                boards[p.board].count++;
+                if (!boards[p.board].latest || new Date(p.createdAt) > new Date(boards[p.board].latest.createdAt)) {
+                    boards[p.board].latest = p;
+                }
+            });
+            const boardNames = { tech: '技术', life: '生活', art: '艺术', music: '音乐', reading: '阅读' };
+            const cards = Object.entries(boards).map(([key, val]) => {
+                const name = boardNames[key] || key;
+                return `
+                    <div class="board-card" data-board="${key}">
+                        <div class="board-name">${escapeHtml(name)}</div>
+                        <div class="board-meta">${val.count} 篇帖子 · 最新：${escapeHtml(val.latest?.title || '暂无')}</div>
+                    </div>
+                `;
+            }).join('');
+            return `
+                <h2 style="font-weight:580; margin-bottom:0.8rem;">板块</h2>
+                <div class="board-grid">${cards}</div>
+            `;
+        }
+
+        function renderBoard(boardTag) {
+            let posts = API.getPosts().filter(p => p.board === boardTag);
+            if (state.searchQuery) {
+                const q = state.searchQuery.toLowerCase();
+                posts = posts.filter(p => p.title.toLowerCase().includes(q) || p.content.slice(0, 80).toLowerCase().includes(
+                q));
+            }
+            if (state.sort === 'hot') {
+                posts.sort((a, b) => b.likedBy.length - a.likedBy.length);
+            } else {
+                posts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            }
+            const boardNames = { tech: '技术', life: '生活', art: '艺术', music: '音乐', reading: '阅读' };
+            const listItems = posts.map((p, idx) => {
+                const preview = p.content.replace(/[#*>`]/g, '').slice(0, 80);
+                const commentIcon =
+                    `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>`;
+                return `
+                    <div class="post-item" data-id="${p.id}">
+                        <img class="post-avatar" src="${avatarUrl(p.author)}" alt="${escapeHtml(p.author)}">
+                        <div class="post-body">
+                            <div style="display:flex; justify-content:space-between;">
+                                <span class="post-title">${escapeHtml(p.title)}</span>
+                                <span class="post-index">#${String(idx+1).padStart(2,'0')}</span>
+                            </div>
+                            <div class="post-meta">
+                                <span>${escapeHtml(p.author)}</span>
+                                <span>·</span>
+                                <span>${timeAgo(p.createdAt)}</span>
+                                ${p.tags.map(t=>`<span class="post-tag">${escapeHtml(t)}</span>`).join('')}
+                            </div>
+                            <div style="font-size:0.85rem; color:var(--text-muted); margin:0.3rem 0;">${escapeHtml(preview)}</div>
+                            <div class="post-actions">
+                                <span class="stat-btn">${commentIcon} ${p.comments.length}</span>
+                                <button class="action-btn like-btn ${p.likedBy.includes(state.currentUser?.username)?'active':''}" data-id="${p.id}">
+                                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                                    ${p.likedBy.length}
+                                </button>
+                                <button class="action-btn collect-btn ${p.collectedBy.includes(state.currentUser?.username)?'active':''}" data-id="${p.id}">
+                                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+                                    ${p.collectedBy.length}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            return `
+                <div style="margin-bottom:1rem;">
+                    <a href="#/" style="color:var(--accent-soft); font-size:0.9rem;">← 返回首页</a>
+                    <h2 style="font-weight:580; margin:0.5rem 0 0.2rem;">${boardNames[boardTag] || boardTag}</h2>
+                </div>
+                <div class="search-bar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" placeholder="搜索标题或内容..." id="searchInput" value="${escapeHtml(state.searchQuery)}">
+                </div>
+                <div class="sort-group">
+                    <button class="sort-btn ${state.sort==='latest'?'active':''}" data-sort="latest">最新</button>
+                    <button class="sort-btn ${state.sort==='hot'?'active':''}" data-sort="hot">最热</button>
+                </div>
+                <div class="post-list">${listItems || '<p style="color:var(--text-muted);">暂无帖子</p>'}</div>
+            `;
+        }
+
+        // ============ 评论渲染（折叠） ============
+        function countDescendants(comments, commentId) {
+            let count = 0;
+            const directChildren = comments.filter(c => c.parentId === commentId);
+            directChildren.forEach(child => {
+                count += 1 + countDescendants(comments, child.id);
+            });
+            return count;
+        }
+
+        function renderComments(flatComments, parentId = null, depth = 0, enableCollapse = true, onlyIds = null) {
+            let children = flatComments.filter(c => c.parentId === parentId);
+            if (onlyIds) {
+                children = children.filter(c => onlyIds.includes(c.id));
+            }
+            if (children.length === 0) return '';
+
+            let html = '';
+            children.forEach((comment) => {
+                const nestedClass = depth > 0 ? ' nested' : '';
+                const descendantCount = countDescendants(flatComments, comment.id);
+                const shouldCollapse = enableCollapse && descendantCount > 3;
+
+                const directChildren = flatComments.filter(c => c.parentId === comment.id);
+                let childHtml = '';
+
+                if (shouldCollapse) {
+                    const visibleCount = 2;
+                    const visibleChildren = directChildren.slice(0, visibleCount);
+                    const hiddenChildren = directChildren.slice(visibleCount);
+                    const visibleIds = visibleChildren.map(c => c.id);
+                    const hiddenIds = hiddenChildren.map(c => c.id);
+                    const visibleHtml = renderComments(flatComments, comment.id, depth + 1, false, visibleIds);
+                    const hiddenHtml = renderComments(flatComments, comment.id, depth + 1, false, hiddenIds);
+                    let hiddenTotal = 0;
+                    hiddenChildren.forEach(c => {
+                        hiddenTotal += 1 + countDescendants(flatComments, c.id);
+                    });
+                    childHtml = `
+                        <div class="collapsed-replies" data-parent="${comment.id}">
+                            ${visibleHtml}
+                            ${hiddenChildren.length > 0 ? `
+                                <button class="expand-replies" data-parent="${comment.id}">
+                                    展开更多回复 (${hiddenTotal})
+                                </button>
+                                <div class="hidden-replies" data-parent="${comment.id}">${hiddenHtml}</div>
+                            ` : ''}
+                        </div>
+                    `;
+                } else {
+                    childHtml = renderComments(flatComments, comment.id, depth + 1, false);
+                }
+
+                html += `
+                    <div class="comment${nestedClass}" data-comment-id="${comment.id}">
+                        <div class="comment-header">
+                            <img class="comment-avatar" src="${avatarUrl(comment.author)}" alt="">
+                            <span class="comment-author">${escapeHtml(comment.author)}</span>
+                            <span class="comment-time">${timeAgo(comment.createdAt)}</span>
+                        </div>
+                        <div class="comment-body">${escapeHtml(comment.content)}</div>
+                        <button class="reply-btn" data-reply-to="${comment.id}">回复</button>
+                        <div class="reply-box" id="replyBox-${comment.id}" style="display:none; margin:0.5rem 0;">
+                            <textarea rows="2" style="width:100%; padding:0.4rem;" placeholder="回复 ${escapeHtml(comment.author)}..."></textarea>
+                            <button class="btn btn-primary btn-sm submit-reply" data-parent="${comment.id}" style="margin-top:0.3rem;">提交</button>
+                        </div>
+                        ${childHtml}
+                    </div>
+                `;
+            });
+            return html;
+        }
+
+        // ============ 帖子详情 ============
+        function renderPostDetail(id) {
+            const post = API.getPostById(id);
+            if (!post) return '<p>帖子不存在</p>';
+            const isAuthor = state.currentUser && state.currentUser.username === post.author;
+            const htmlContent = DOMPurify.sanitize(marked.parse(post.content));
+            return `
+                <a href="#/board/${post.board}" style="color:var(--accent-soft); font-size:0.9rem;">← 返回板块</a>
+                <div class="post-detail" style="margin-top:0.8rem;">
+                    <h1 style="font-size:1.35rem; font-weight:600;">${escapeHtml(post.title)}</h1>
+                    <div class="post-meta" style="margin:0.5rem 0;">
+                        <a href="#/user/${encodeURIComponent(post.author)}" style="display:flex; align-items:center; gap:0.4rem;">
+                            <img class="avatar-sm" src="${avatarUrl(post.author)}" style="width:24px;height:24px;">
+                            <span>${escapeHtml(post.author)}</span>
+                        </a>
+                        <span>·</span>
+                        <span>${timeAgo(post.createdAt)}</span>
+                        ${post.tags.map(t=>`<span class="post-tag">${escapeHtml(t)}</span>`).join('')}
+                        ${isAuthor ? `<button class="btn-ghost" id="editPostBtn" style="margin-left:auto;">编辑</button><button class="btn-ghost" id="deletePostBtn">删除</button>` : ''}
+                    </div>
+                    <div class="post-content">${htmlContent}</div>
+                    <div class="detail-actions">
+                        <button class="action-btn like-btn ${post.likedBy.includes(state.currentUser?.username)?'active':''}" data-id="${post.id}">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                            喜欢 ${post.likedBy.length}
+                        </button>
+                        <button class="action-btn collect-btn ${post.collectedBy.includes(state.currentUser?.username)?'active':''}" data-id="${post.id}">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+                            收藏 ${post.collectedBy.length}
+                        </button>
+                    </div>
+                </div>
+                <div class="comments-section">
+                    <h3 style="font-weight:580; margin-bottom:0.8rem;">评论 (${post.comments.length})</h3>
+                    ${state.currentUser ? `
+                    <div class="comment-form">
+                        <textarea id="newCommentText" placeholder="写下你的想法..."></textarea>
+                        <button class="btn btn-primary" id="submitTopComment">发表评论</button>
+                    </div>` : `<p style="color:var(--text-muted); font-size:0.9rem;"><a href="#/login">登录</a>后参与评论</p>`}
+                    <div id="commentsContainer">${renderComments(post.comments)}</div>
+                </div>
+            `;
+        }
+
+        // ============ 个人主页 ============
+        function renderUserProfile(username) {
+            const allPosts = API.getPosts();
+            const userPosts = allPosts.filter(p => p.author === username).sort((a, b) => new Date(b.createdAt) - new Date(a
+            .createdAt));
+            const userComments = [];
+            allPosts.forEach(p => {
+                p.comments.forEach(c => {
+                    if (c.author === username) {
+                        userComments.push({
+                            ...c,
+                            postTitle: p.title,
+                            postId: p.id,
+                            board: p.board
+                        });
+                    }
+                });
+            });
+            userComments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            // 收藏的帖子
+            const collectedPosts = allPosts.filter(p => p.collectedBy.includes(username));
+
+            const postCount = userPosts.length;
+            const commentCount = userComments.length;
+            const collectCount = collectedPosts.length;
+            const exists = postCount > 0 || commentCount > 0 || collectCount > 0;
+
+            if (!exists) {
+                return `
+                    <div style="padding:2rem 0; text-align:center; color:var(--text-muted);">
+                        <p>用户 “${escapeHtml(username)}” 不存在或尚未发布内容。</p>
+                        <p style="margin-top:0.5rem;"><a href="#/" style="color:var(--accent-soft);">返回首页</a></p>
+                    </div>
+                `;
+            }
+
+            let joinTime = null;
+            const allActivities = [];
+            userPosts.forEach(p => allActivities.push({ time: p.createdAt }));
+            userComments.forEach(c => allActivities.push({ time: c.createdAt }));
+            if (allActivities.length > 0) {
+                const earliest = allActivities.reduce((a, b) => new Date(a.time) < new Date(b.time) ? a : b);
+                joinTime = earliest.time;
+            }
+
+            // 当前用户是否是自己
+            const isOwn = state.currentUser && state.currentUser.username === username;
+            const signature = isOwn ? (state.currentUser.signature || '') : '';
+
+            const activeTab = state.profileTab || 'posts';
+            let tabContent = '';
+            const postIcon =
+                `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v2H4V4zm0 4h16v2H4V8zm0 4h10v2H4v-2zm0 4h16v2H4v-2zm0 4h16v2H4v-2z"/></svg>`;
+            const commentIcon =
+                `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>`;
+            const calendarIcon =
+                `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>`;
+            const starIcon =
+                `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`;
+
+            if (activeTab === 'posts') {
+                if (userPosts.length === 0) {
+                    tabContent = `<p style="color:var(--text-muted);">该用户还没有发布帖子。</p>`;
+                } else {
+                    tabContent = userPosts.map(p => `
+                        <div class="post-item" style="cursor:pointer;" data-id="${p.id}">
+                            <img class="post-avatar" src="${avatarUrl(p.author)}" alt="">
+                            <div class="post-body">
+                                <div style="display:flex; justify-content:space-between;">
+                                    <span class="post-title">${escapeHtml(p.title)}</span>
+                                    <span class="post-index">#${String(userPosts.indexOf(p)+1).padStart(2,'0')}</span>
+                                </div>
+                                <div class="post-meta">
+                                    <span>${timeAgo(p.createdAt)}</span>
+                                    ${p.tags.map(t=>`<span class="post-tag">${escapeHtml(t)}</span>`).join('')}
+                                    <span class="stat-btn">${commentIcon} ${p.comments.length}</span>
+                                </div>
+                                <div style="font-size:0.85rem; color:var(--text-muted); margin:0.3rem 0;">${escapeHtml(p.content.replace(/[#*>`]/g,'').slice(0,80))}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } else if (activeTab === 'comments') {
+                if (userComments.length === 0) {
+                    tabContent = `<p style="color:var(--text-muted);">该用户还没有发表评论。</p>`;
+                } else {
+                    tabContent = userComments.map(c => `
+                        <div class="comment-item">
+                            <div class="comment-content">${escapeHtml(c.content)}</div>
+                            <div class="comment-meta">
+                                在 <a href="#/post/${c.postId}" class="post-ref">${escapeHtml(c.postTitle)}</a> · ${timeAgo(c.createdAt)}
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } else if (activeTab === 'collections') {
+                if (collectedPosts.length === 0) {
+                    tabContent = `<p style="color:var(--text-muted);">还没有收藏任何帖子。</p>`;
+                } else {
+                    tabContent = collectedPosts.map(p => `
+                        <div class="post-item" style="cursor:pointer;" data-id="${p.id}">
+                            <img class="post-avatar" src="${avatarUrl(p.author)}" alt="">
+                            <div class="post-body">
+                                <div style="display:flex; justify-content:space-between;">
+                                    <span class="post-title">${escapeHtml(p.title)}</span>
+                                    <span class="post-index">#${String(collectedPosts.indexOf(p)+1).padStart(2,'0')}</span>
+                                </div>
+                                <div class="post-meta">
+                                    <span>作者 ${escapeHtml(p.author)}</span>
+                                    <span>·</span>
+                                    <span>${timeAgo(p.createdAt)}</span>
+                                    ${p.tags.map(t=>`<span class="post-tag">${escapeHtml(t)}</span>`).join('')}
+                                    <span class="stat-btn">${commentIcon} ${p.comments.length}</span>
+                                </div>
+                                <div style="font-size:0.85rem; color:var(--text-muted); margin:0.3rem 0;">${escapeHtml(p.content.replace(/[#*>`]/g,'').slice(0,80))}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            // 编辑资料部分（仅自己可见）
+            let editSection = '';
+            if (isOwn) {
+                if (state.isEditingProfile) {
+                    editSection = `
+                        <div class="edit-profile-form">
+                            <div class="form-group">
+                                <label class="form-label">个人签名（最多50字）</label>
+                                <input class="form-input" id="editSignatureInput" value="${escapeHtml(signature)}" maxlength="50" placeholder="写一句签名吧...">
+                            </div>
+                            <button class="btn btn-primary" id="saveSignatureBtn">保存签名</button>
+                            <button class="btn btn-outline" id="cancelEditProfileBtn">取消</button>
+                        </div>
+                    `;
+                } else {
+                    editSection = `
+                        <div class="profile-actions">
+                            ${signature ? `<span class="signature">“${escapeHtml(signature)}”</span>` : `<span class="signature" style="color:var(--text-muted);">还没有签名，点右侧编辑添加</span>`}
+                            <button class="btn btn-ghost" id="editProfileBtn">编辑资料</button>
+                        </div>
+                    `;
+                }
+            } else {
+                // 查看他人，只显示签名（如果有）
+                if (signature) {
+                    editSection = `<div class="profile-actions"><span class="signature">“${escapeHtml(signature)}”</span></div>`;
+                }
+            }
+
+            return `
+                <div style="margin-bottom:1rem;">
+                    <a href="#/" style="color:var(--accent-soft); font-size:0.9rem;">← 返回首页</a>
+                </div>
+                <div class="profile-header">
+                    <img class="profile-avatar" src="${avatarUrl(username)}" alt="${escapeHtml(username)}">
+                    <div class="profile-info">
+                        <h1>${escapeHtml(username)}</h1>
+                        ${editSection}
+                        <div class="stats">
+                            <span>${postIcon} ${postCount} 篇帖子</span>
+                            <span>${commentIcon} ${commentCount} 条评论</span>
+                            <span>${starIcon} ${collectCount} 个收藏</span>
+                            ${joinTime ? `<span>${calendarIcon} 加入于 ${new Date(joinTime).toLocaleDateString()}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-tabs">
+                    <button class="${activeTab==='posts'?'active':''}" data-tab="posts">发布的帖子</button>
+                    <button class="${activeTab==='comments'?'active':''}" data-tab="comments">发表的评论</button>
+                    ${isOwn ? `<button class="${activeTab==='collections'?'active':''}" data-tab="collections">我的收藏</button>` : ''}
+                </div>
+                <div class="profile-content">
+                    ${tabContent}
+                </div>
+            `;
+        }
+
+        // ============ 发帖 / 编辑 / 登录 / 注册 ============
+        function renderNewPost() {
+            if (!state.currentUser) { navigate('#/login'); return '<p>请先登录</p>'; }
+            return `
+                <h2 style="font-weight:580;">发布新帖</h2>
+                <div class="form-group"><label class="form-label">板块</label>
+                    <select class="form-select" id="postBoard">
+                        <option value="tech">技术</option><option value="life">生活</option><option value="art">艺术</option><option value="music">音乐</option><option value="reading">阅读</option>
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">标签（逗号分隔）</label>
+                    <input class="form-input" id="postTags" placeholder="例如：前端, 设计">
+                </div>
+                <div class="form-group"><label class="form-label">标题</label>
+                    <input class="form-input" id="postTitle">
+                </div>
+                <div class="form-group"><label class="form-label">内容（支持 Markdown）</label>
+                    <textarea class="form-textarea" id="postContent"></textarea>
+                    <button class="btn btn-outline" id="previewToggle" style="margin-top:0.5rem;">预览</button>
+                    <div class="preview-box" id="previewBox" style="display:none; margin-top:0.5rem;"></div>
+                </div>
+                <button class="btn btn-primary" id="submitPost">发布</button>
+            `;
+        }
+
+        function renderEditPost(id) {
+            const post = API.getPostById(id);
+            if (!post || !state.currentUser || post.author !== state.currentUser.username) { navigate('#/'); return ''; }
+            return `
+                <h2>编辑帖子</h2>
+                <div class="form-group"><label>板块</label><select class="form-select" id="editBoard">${['tech','life','art','music','reading'].map(b=>`<option value="${b}" ${post.board===b?'selected':''}>${b}</option>`).join('')}</select></div>
+                <div class="form-group"><label>标签</label><input class="form-input" id="editTags" value="${escapeHtml(post.tags.join(','))}"></div>
+                <div class="form-group"><label>标题</label><input class="form-input" id="editTitle" value="${escapeHtml(post.title)}"></div>
+                <div class="form-group"><label>内容</label><textarea class="form-textarea" id="editContent">${escapeHtml(post.content)}</textarea></div>
+                <button class="btn btn-primary" id="updatePost">保存修改</button>
+                <button class="btn btn-outline" id="cancelEdit">取消</button>
+            `;
+        }
+
+        function renderLogin() {
+            return `
+                <h2>登录</h2>
+                <div class="form-group"><input class="form-input" id="loginUsername" placeholder="用户名"></div>
+                <button class="btn btn-primary" id="loginBtn">登录</button>
+                <p style="margin-top:0.8rem;">没有账号？<a href="#/register">注册</a></p>
+            `;
+        }
+
+        function renderRegister() {
+            return `
+                <h2>注册</h2>
+                <div class="form-group"><input class="form-input" id="regUsername" placeholder="用户名"></div>
+                <button class="btn btn-primary" id="registerBtn">注册</button>
+                <p>已有账号？<a href="#/login">登录</a></p>
+            `;
+        }
+
+        function timeAgo(iso) {
+            const diff = Date.now() - new Date(iso).getTime();
+            const mins = Math.floor(diff / 60000);
+            if (mins < 1) return '刚刚';
+            if (mins < 60) return `${mins}分钟前`;
+            const hours = Math.floor(mins / 60);
+            if (hours < 24) return `${hours}小时前`;
+            const days = Math.floor(hours / 24);
+            if (days < 30) return `${days}天前`;
+            return new Date(iso).toLocaleDateString();
+        }
+
+        // ==================== 事件绑定 ====================
+        function attachEvents() {
+            $$('.board-card').forEach(card => {
+                card.addEventListener('click', () => navigate(`/board/${card.dataset.board}`));
+            });
+            $$('.post-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    if (e.target.closest('button')) return;
+                    navigate(`/post/${item.dataset.id}`);
+                });
+            });
+            $$('.like-btn, .collect-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (!state.currentUser) { showToast('请先登录', 'error'); return; }
+                    const id = btn.dataset.id;
+                    if (btn.classList.contains('like-btn')) {
+                        API.toggleLike(id, state.currentUser.username);
+                    } else {
+                        API.toggleCollect(id, state.currentUser.username);
+                    }
+                    renderApp();
+                });
+            });
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    state.searchQuery = e.target.value;
+                    renderApp();
+                });
+            }
+            $$('.sort-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    state.sort = btn.dataset.sort;
+                    renderApp();
+                });
+            });
+            const submitPost = document.getElementById('submitPost');
+            if (submitPost) {
+                submitPost.addEventListener('click', () => {
+                    const board = document.getElementById('postBoard').value;
+                    const tags = document.getElementById('postTags').value.split(',').map(t => t.trim()).filter(Boolean);
+                    const title = document.getElementById('postTitle').value.trim();
+                    const content = document.getElementById('postContent').value.trim();
+                    if (!title || !content) return showToast('请填写标题和内容', 'error');
+                    API.addPost({ title, content, author: state.currentUser.username, board, tags });
+                    showToast('发布成功', 'success');
+                    navigate(`/board/${board}`);
+                });
+            }
+            const previewToggle = document.getElementById('previewToggle');
+            if (previewToggle) {
+                previewToggle.addEventListener('click', () => {
+                    const content = document.getElementById('postContent').value;
+                    const previewBox = document.getElementById('previewBox');
+                    if (previewBox.style.display === 'none') {
+                        previewBox.innerHTML = DOMPurify.sanitize(marked.parse(content));
+                        previewBox.style.display = 'block';
+                        previewToggle.textContent = '编辑';
+                    } else {
+                        previewBox.style.display = 'none';
+                        previewToggle.textContent = '预览';
+                    }
+                });
+            }
+            const updateBtn = document.getElementById('updatePost');
+            if (updateBtn) {
+                updateBtn.addEventListener('click', () => {
+                    const id = state.route.id;
+                    const board = document.getElementById('editBoard').value;
+                    const tags = document.getElementById('editTags').value.split(',').map(t => t.trim()).filter(Boolean);
+                    const title = document.getElementById('editTitle').value.trim();
+                    const content = document.getElementById('editContent').value.trim();
+                    API.updatePost(id, { board, tags, title, content });
+                    showToast('已更新', 'success');
+                    navigate(`/post/${id}`);
+                });
+            }
+            const cancelEdit = document.getElementById('cancelEdit');
+            if (cancelEdit) cancelEdit.addEventListener('click', () => history.back());
+            const deleteBtn = document.getElementById('deletePostBtn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', () => {
+                    if (confirm('确定删除这篇帖子吗？')) {
+                        API.deletePost(state.route.id);
+                        showToast('已删除', 'info');
+                        navigate('/');
+                    }
+                });
+            }
+            const editPostBtn = document.getElementById('editPostBtn');
+            if (editPostBtn) {
+                editPostBtn.addEventListener('click', () => navigate(`/edit-post/${state.route.id}`));
+            }
+            $$('.reply-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const commentId = btn.dataset.replyTo;
+                    const box = document.getElementById(`replyBox-${commentId}`);
+                    if (box) box.style.display = 'block';
+                });
+            });
+            $$('.submit-reply').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const parentId = btn.dataset.parent;
+                    const textarea = btn.parentElement.querySelector('textarea');
+                    const content = textarea.value.trim();
+                    if (!content) return;
+                    if (!state.currentUser) { showToast('请先登录', 'error'); return; }
+                    API.addComment(state.route.id, parentId, state.currentUser.username, content);
+                    showToast('回复成功', 'success');
+                    renderApp();
+                });
+            });
+            const submitTop = document.getElementById('submitTopComment');
+            if (submitTop) {
+                submitTop.addEventListener('click', () => {
+                    const textarea = document.getElementById('newCommentText');
+                    const content = textarea.value.trim();
+                    if (!content) return;
+                    if (!state.currentUser) { showToast('请先登录', 'error'); return; }
+                    API.addComment(state.route.id, null, state.currentUser.username, content);
+                    showToast('评论成功', 'success');
+                    renderApp();
+                });
+            }
+            $$('.expand-replies').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const parent = btn.closest('.collapsed-replies');
+                    const hidden = parent.querySelector('.hidden-replies');
+                    if (hidden) {
+                        hidden.style.display = 'block';
+                        btn.style.display = 'none';
+                    }
+                });
+            });
+            // 个人主页 tab 切换
+            $$('.profile-tabs button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    state.profileTab = btn.dataset.tab;
+                    // 如果切换到收藏，但用户未登录或不是本人，则不允许（但按钮只对本人显示）
+                    renderApp();
+                });
+            });
+            // 编辑资料
+            const editProfileBtn = document.getElementById('editProfileBtn');
+            if (editProfileBtn) {
+                editProfileBtn.addEventListener('click', () => {
+                    state.isEditingProfile = true;
+                    renderApp();
+                });
+            }
+            const cancelEditProfileBtn = document.getElementById('cancelEditProfileBtn');
+            if (cancelEditProfileBtn) {
+                cancelEditProfileBtn.addEventListener('click', () => {
+                    state.isEditingProfile = false;
+                    renderApp();
+                });
+            }
+            const saveSignatureBtn = document.getElementById('saveSignatureBtn');
+            if (saveSignatureBtn) {
+                saveSignatureBtn.addEventListener('click', () => {
+                    const input = document.getElementById('editSignatureInput');
+                    if (input) {
+                        const val = input.value.trim().slice(0, 50);
+                        if (state.currentUser) {
+                            state.currentUser.signature = val;
+                            saveUser();
+                            state.isEditingProfile = false;
+                            showToast('签名已更新', 'success');
+                            renderApp();
+                        }
+                    }
+                });
+            }
+            // 登录/注册
+            const loginBtn = document.getElementById('loginBtn');
+            if (loginBtn) {
+                loginBtn.addEventListener('click', () => {
+                    const username = document.getElementById('loginUsername').value.trim();
+                    if (!username) return showToast('请输入用户名', 'error');
+                    loginUser(username);
+                    showToast(`欢迎，${username}`, 'success');
+                    navigate('/');
+                });
+            }
+            const registerBtn = document.getElementById('registerBtn');
+            if (registerBtn) {
+                registerBtn.addEventListener('click', () => {
+                    const username = document.getElementById('regUsername').value.trim();
+                    if (!username) return showToast('请输入用户名', 'error');
+                    loginUser(username);
+                    showToast('注册成功', 'success');
+                    navigate('/');
+                });
+            }
+        }
+
+        // ==================== 路由监听 & 初始化 ====================
+        window.addEventListener('hashchange', () => {
+            state.route = parseHash();
+            state.searchQuery = '';
+            // 切换页面时重置编辑状态和 tab
+            state.isEditingProfile = false;
+            if (state.route.page !== 'user') state.profileTab = 'posts';
+            renderApp();
+        });
+
+        loadState();
+        state.route = parseHash();
+        renderApp();
+    </script>
+</body>
+</html>
